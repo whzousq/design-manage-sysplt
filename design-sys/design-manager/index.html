@@ -1,0 +1,3584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>设计项目进度管理系统 v2.0</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --primary: #1a73e8;
+  --primary-dark: #1557b0;
+  --primary-light: #e8f0fe;
+  --success: #34a853;
+  --warning: #fbbc04;
+  --danger: #ea4335;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f4;
+  --gray-200: #e8eaed;
+  --gray-300: #dadce0;
+  --gray-400: #bdc1c6;
+  --gray-500: #9aa0a6;
+  --gray-600: #80868b;
+  --gray-700: #5f6368;
+  --gray-800: #3c4043;
+  --gray-900: #202124;
+  --white: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --transition: all 0.2s ease;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Login Page */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 50%, #1565c0 100%);
+  position: relative;
+  overflow: hidden;
+}
+.login-page::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 50%;
+  top: -200px; right: -100px;
+}
+.login-page::after {
+  content: '';
+  position: absolute;
+  width: 400px; height: 400px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  bottom: -150px; left: -100px;
+}
+.login-container {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 48px 40px;
+  width: 420px;
+  max-width: 90vw;
+  position: relative;
+  z-index: 1;
+}
+.login-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.login-logo .icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(26,115,232,0.3);
+}
+.login-logo .icon svg { width: 30px; height: 30px; fill: white; }
+.login-logo h1 { font-size: 22px; font-weight: 700; color: var(--gray-900); letter-spacing: -0.3px; }
+.login-logo p { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--gray-900);
+  transition: var(--transition);
+  background: var(--white);
+  outline: none;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+}
+.form-group input::placeholder { color: var(--gray-400); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  line-height: 1.4;
+}
+.btn-primary { background: var(--primary); color: white; width: 100%; padding: 12px; font-size: 15px; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,115,232,0.3); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { background: #2d9249; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { background: #d33426; }
+.btn-outline { background: transparent; border: 1.5px solid var(--gray-300); color: var(--gray-700); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.btn-warning { background: var(--warning); color: var(--gray-900); }
+.btn-warning:hover { background: #f0a800; }
+
+.login-error {
+  background: #fce8e6;
+  color: var(--danger);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+.login-hint {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--gray-600);
+  line-height: 1.8;
+}
+.login-hint strong { color: var(--gray-800); }
+
+/* App Layout */
+.app-container { display: none; min-height: 100vh; }
+.top-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+.nav-brand .icon-sm {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-brand .icon-sm svg { width: 18px; height: 18px; fill: white; }
+.nav-user { display: flex; align-items: center; gap: 16px; }
+.user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-700); }
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.role-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.role-admin { background: #fce8e6; color: var(--danger); }
+.role-engineer { background: #e8f0fe; color: var(--primary); }
+.role-staff { background: #e6f4ea; color: var(--success); }
+
+/* Tab Navigation */
+.tab-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 24px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+.tab-btn {
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-600);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--primary); background: var(--primary-light); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+/* Main Content */
+.main-content { padding: 24px; max-width: 1600px; margin: 0 auto; }
+
+/* Table Toolbar */
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.toolbar-left { display: flex; align-items: center; gap: 12px; }
+.toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  transition: var(--transition);
+}
+.search-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
+.search-box svg { width: 16px; height: 16px; fill: var(--gray-500); flex-shrink: 0; }
+.search-box input {
+  border: none;
+  outline: none;
+  padding: 8px 0;
+  font-size: 13px;
+  width: 200px;
+  background: transparent;
+  color: var(--gray-900);
+}
+
+/* Table */
+.table-container {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  position: relative;
+  overflow: hidden;
+}
+.table-wrapper {
+  overflow-x: auto;
+  max-height: calc(100vh - 320px);
+}
+.table-wrapper table {
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.table-wrapper thead tr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--white);
+}
+.table-wrapper th {
+  border-bottom: 2px solid var(--gray-200);
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: var(--gray-700);
+  background: var(--white);
+}
+.table-wrapper td {
+  border-bottom: 1px solid var(--gray-100);
+  padding: 8px 12px;
+}
+.table-wrapper tbody tr:hover {
+  background: var(--gray-50);
+}
+.top-scroll-bar {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 18px;
+  position: relative;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--gray-300);
+  cursor: grab;
+}
+.top-scroll-bar:active { cursor: grabbing; }
+.top-scroll-bar-inner { height: 1px; visibility: hidden; }
+.top-scroll-bar::-webkit-scrollbar {
+  height: 8px;
+}
+.top-scroll-bar::-webkit-scrollbar-track {
+  background: var(--gray-200);
+}
+.top-scroll-bar::-webkit-scrollbar-thumb {
+  background: var(--gray-500);
+  border-radius: 4px;
+}
+.top-scroll-bar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-600);
+}
+
+/* Sortable / Filterable Th */
+.th-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.th-sort-text { cursor: pointer; }
+.th-sort-icon {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 0;
+  font-size: 8px;
+  color: var(--gray-400);
+  margin-left: 2px;
+}
+.th-sort-icon .sort-up, .th-sort-icon .sort-down { line-height: 1; }
+.th-sort-icon .sort-active { color: var(--primary); }
+.th-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+  color: var(--gray-400);
+  font-size: 14px;
+  padding: 0;
+  margin-left: 2px;
+  transition: var(--transition);
+}
+.th-filter-btn:hover { background: var(--gray-200); color: var(--gray-700); }
+.th-filter-btn.has-filter { color: var(--primary); }
+.th-filter-btn.has-filter::after {
+  content: '';
+  position: absolute;
+  width: 6px; height: 6px;
+  background: var(--primary);
+  border-radius: 50%;
+  bottom: 1px;
+  right: 1px;
+}
+.th-filter-btn { position: relative; }
+
+/* Filter Dropdown Panel */
+.filter-panel {
+  position: fixed;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 8px 0;
+  z-index: 9999;
+  min-width: 180px;
+  max-height: 280px;
+  overflow-y: auto;
+  display: none;
+}
+.filter-panel.show { display: block; }
+.filter-panel-header {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 4px;
+}
+.filter-item {
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.filter-item:hover { background: var(--primary-light); color: var(--primary); }
+.filter-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+.filter-date-range {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-date-range label {
+  font-size: 12px;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+.filter-date-range input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+}
+.filter-date-range input:focus { border-color: var(--primary); }
+.filter-date-actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 4px;
+}
+.filter-date-actions button {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Status Badges */
+.status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.status-completed { background: #e6f4ea; color: #137333; }
+.status-in-progress { background: #e8f0fe; color: #1a73e8; }
+.status-pending { background: #fef7e0; color: #b06000; }
+.status-delayed { background: #fce8e6; color: #c5221f; }
+
+/* Column text wrapping */
+#table-construction th, #table-phase th, #table-technical th,
+#table-construction-body th, #table-phase-body th, #table-technical-body th {
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
+}
+#table-construction td, #table-phase td, #table-technical td,
+#table-construction-body td, #table-phase-body td, #table-technical-body td {
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
+}
+.td-center { text-align: center; }
+.td-actions { text-align: center; white-space: nowrap; }
+/* Table Footer */
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--gray-200);
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 680px;
+  max-width: 92vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-close {
+  width: 32px; height: 32px;
+  border: none;
+  background: var(--gray-100);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  font-size: 18px;
+  color: var(--gray-600);
+}
+.modal-close:hover { background: var(--gray-200); color: var(--gray-900); }
+.modal-body { padding: 24px; overflow-y: auto; }
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--gray-200);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-row.full { grid-template-columns: 1fr; }
+.form-row .form-group { margin-bottom: 0; }
+
+/* Autocomplete / Suggestion Dropdown */
+.autocomplete-wrapper { position: relative; }
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 50;
+  display: none;
+}
+.autocomplete-list.show { display: block; }
+.autocomplete-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: var(--transition);
+  border-bottom: 1px solid var(--gray-100);
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: var(--primary-light); color: var(--primary); }
+.autocomplete-item .ac-name { font-weight: 600; }
+.autocomplete-item .ac-detail { font-size: 11px; color: var(--gray-500); margin-left: 6px; }
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 260px;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.toast-success { background: #137333; color: white; }
+.toast-error { background: #c5221f; color: white; }
+.toast-info { background: #1a73e8; color: white; }
+
+/* Confirm Dialog */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1100;
+  align-items: center;
+  justify-content: center;
+}
+.confirm-overlay.show { display: flex; }
+.confirm-dialog {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 28px;
+  width: 400px;
+  max-width: 90vw;
+  text-align: center;
+}
+.confirm-dialog h4 { font-size: 16px; margin-bottom: 8px; }
+.confirm-dialog p { font-size: 14px; color: var(--gray-600); margin-bottom: 24px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* Tab Content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* User Management Table */
+.user-table { min-width: 700px; }
+
+/* Designer Management Table */
+.designer-table { min-width: 800px; }
+
+/* Loading */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.8);
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.loading-overlay.show { display: flex; }
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==================== STATISTICS PAGE ==================== */
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.stat-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.stat-icon.blue { background: #e8f0fe; color: #1a73e8; }
+.stat-icon.green { background: #e6f4ea; color: #34a853; }
+.stat-icon.orange { background: #fef7e0; color: #f9ab00; }
+.stat-icon.purple { background: #f3e8fd; color: #9334e6; }
+.stat-info { flex: 1; }
+.stat-label { font-size: 13px; color: var(--gray-600); margin-bottom: 2px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--gray-900); }
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.chart-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  padding: 20px;
+}
+.chart-card h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.chart-card canvas {
+  width: 100% !important;
+  max-height: 320px;
+}
+
+/* Analysis Section */
+.stats-analysis {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+.analysis-selector {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+  padding: 20px;
+}
+.analysis-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.analysis-tab {
+  padding: 6px 14px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: 20px;
+  background: var(--white);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.analysis-tab:hover { border-color: var(--primary); color: var(--primary); }
+.analysis-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+.analysis-filters .form-group { margin-bottom: 12px; }
+.analysis-filters label { font-size: 12px; color: var(--gray-600); margin-bottom: 4px; }
+.analysis-filters select, .analysis-filters input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 13px;
+  outline: none;
+  background: var(--white);
+}
+.analysis-filters select:focus, .analysis-filters input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+}
+.analysis-result { min-width: 0; }
+.analysis-table { min-width: auto; }
+.analysis-table th { font-size: 12px; padding: 10px 12px; }
+.analysis-table td { font-size: 13px; padding: 8px 12px; }
+.analysis-total-row { background: var(--primary-light) !important; font-weight: 700; }
+.analysis-total-row td { color: var(--primary-dark); }
+
+@media (max-width: 900px) {
+  .stats-analysis { grid-template-columns: 1fr; }
+}
+
+/* Hidden file input */
+.hidden-input { display: none; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-content { padding: 16px; }
+  .form-row { grid-template-columns: 1fr; }
+  .table-toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-left, .toolbar-right { flex-wrap: wrap; }
+  .search-box input { width: 140px; }
+  .tab-btn { padding: 12px 16px; font-size: 13px; }
+  .stats-cards { grid-template-columns: 1fr 1fr; }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+@media print {
+  .top-nav, .tab-nav, .table-toolbar, .td-actions, .table-footer { display: none !important; }
+  .main-content { padding: 0; }
+  .table-container { box-shadow: none; border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- ==================== LOGIN PAGE ==================== -->
+<div id="loginPage" class="login-page">
+  <div class="login-container">
+    <div class="login-logo">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      </div>
+      <h1>设计项目进度管理系统</h1>
+      <p>工业设计院项目管理平台</p>
+    </div>
+    <div id="loginError" class="login-error">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <span id="loginErrorMsg">用户名或密码错误</span>
+    </div>
+    <div id="loginForm">
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="loginUsername" placeholder="请输入用户名" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">
+      </div>
+      <button type="button" id="loginBtn" class="btn btn-primary">登 录</button>
+    </div>
+    <div class="login-hint">
+      <strong>默认测试账号：</strong><br>
+      管理员：admin / admin123<br>
+      首席工程师：engineer / eng123<br>
+      设计人员：staff / staff123
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="appContainer" class="app-container">
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <div class="icon-sm">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      </div>
+      设计项目进度管理系统
+    </div>
+    <div class="nav-user">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <span id="userName">管理员</span>
+        <span class="role-badge" id="userRole">管理员</span>
+      </div>
+      <button class="btn btn-sm btn-outline" id="btnChangePassword" style="margin-right:8px;">修改密码</button>
+      <button class="btn btn-sm btn-outline" id="btnLogout">退出登录</button>
+    </div>
+  </nav>
+
+  <div class="tab-nav" id="tabNav">
+    <button class="tab-btn active" data-tab="construction">施工图计划表</button>
+    <button class="tab-btn" data-tab="phase">阶段设计计划表</button>
+    <button class="tab-btn" data-tab="technical">技术要求计划表</button>
+    <button class="tab-btn" data-tab="stats">数据统计</button>
+    <button class="tab-btn" data-tab="designers" id="tabDesignerBtn" style="display:none;">设计人员管理</button>
+    <button class="tab-btn" data-tab="majors" id="tabMajorBtn" style="display:none;">专业类别维护</button>
+    <button class="tab-btn" data-tab="users" id="tabUserBtn" style="display:none;">用户管理</button>
+  </div>
+
+  <main class="main-content">
+
+    <!-- ==================== 施工图计划表 ==================== -->
+    <div id="tab-construction" class="tab-content active">
+      <div class="table-toolbar">
+        <div class="toolbar-left"><h2 style="font-size:18px;font-weight:700;">施工图计划表</h2></div>
+        <div class="toolbar-right">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" id="search-construction" placeholder="搜索项目...">
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-template-construction">导出模板</button>
+          <button class="btn btn-sm btn-warning" id="btn-import-construction">导入Excel</button>
+          <button class="btn btn-sm btn-outline" id="btn-export-csv-construction">导出CSV</button>
+          <button class="btn btn-sm btn-outline" id="btn-export-excel-construction">导出Excel</button>
+          <button class="btn btn-sm btn-danger" id="btn-batch-delete-construction">批量删除</button>
+          <button class="btn btn-sm btn-outline" id="btn-batch-add-construction">批量新增</button>
+          <button class="btn btn-sm btn-success" id="btn-add-construction">+ 新增记录</button>
+          <input type="file" id="file-import-construction" class="hidden-input" accept=".xlsx,.xls">
+        </div>
+      </div>
+      <!-- 批量删除筛选面板 -->
+      <div id="batch-delete-panel-construction" class="table-container" style="display:none;margin-bottom:16px;">
+        <div style="padding:16px;border-bottom:1px solid var(--gray-200);">
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">项目名称</label>
+              <select id="bd-construction-project" class="bd-select" style="width:200px;">
+                <option value="">全部项目</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">单位工程名称</label>
+              <select id="bd-construction-unit" class="bd-select" style="width:200px;">
+                <option value="">全部</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">设计人</label>
+              <select id="bd-construction-designer" class="bd-select" style="width:150px;">
+                <option value="">全部人员</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">专业类别</label>
+              <select id="bd-construction-major" class="bd-select" style="width:120px;">
+                <option value="">全部专业</option>
+                <option value="建筑">建筑</option>
+                <option value="结构">结构</option>
+                <option value="给排水">给排水</option>
+                <option value="暖通">暖通</option>
+                <option value="电气">电气</option>
+                <option value="总图">总图</option>
+                <option value="动力">动力</option>
+                <option value="通信">通信</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">计划完成时间范围</label>
+              <div style="display:flex;gap:8px;">
+                <input type="date" id="bd-construction-start" class="bd-input">
+                <span style="color:var(--gray-400);">-</span>
+                <input type="date" id="bd-construction-end" class="bd-input">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-outline" id="btn-bd-reset-construction">重置</button>
+              <button class="btn btn-sm btn-danger" id="btn-bd-execute-construction">执行删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="top-scroll-bar" id="top-scroll-construction">
+          <div class="top-scroll-bar-inner"></div>
+        </div>
+        <div class="table-wrapper" id="table-wrapper-construction">
+          <table id="table-construction">
+            <thead id="thead-construction"></thead>
+            <tbody id="tbody-construction"></tbody>
+          </table>
+        </div>
+        <div class="table-footer"><span id="info-construction">共 0 条记录</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== 阶段设计计划表 ==================== -->
+    <div id="tab-phase" class="tab-content">
+      <div class="table-toolbar">
+        <div class="toolbar-left"><h2 style="font-size:18px;font-weight:700;">阶段设计计划表</h2></div>
+        <div class="toolbar-right">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" id="search-phase" placeholder="搜索工程...">
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-template-phase">导出模板</button>
+          <button class="btn btn-sm btn-warning" id="btn-import-phase">导入Excel</button>
+          <button class="btn btn-sm btn-outline" id="btn-export-csv-phase">导出CSV</button>
+          <button class="btn btn-sm btn-outline" id="btn-export-excel-phase">导出Excel</button>
+          <button class="btn btn-sm btn-danger" id="btn-batch-delete-phase">批量删除</button>
+          <button class="btn btn-sm btn-success" id="btn-add-phase">+ 新增记录</button>
+          <input type="file" id="file-import-phase" class="hidden-input" accept=".xlsx,.xls">
+        </div>
+      </div>
+      <!-- 批量删除筛选面板 -->
+      <div id="batch-delete-panel-phase" class="table-container" style="display:none;margin-bottom:16px;">
+        <div style="padding:16px;border-bottom:1px solid var(--gray-200);">
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">项目名称</label>
+              <select id="bd-phase-project" class="bd-select" style="width:250px;">
+                <option value="">全部项目</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">责任部门</label>
+              <select id="bd-phase-department" class="bd-select" style="width:180px;">
+                <option value="">全部部门</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">出版时间范围</label>
+              <div style="display:flex;gap:8px;">
+                <input type="date" id="bd-phase-start" class="bd-input">
+                <span style="color:var(--gray-400);">-</span>
+                <input type="date" id="bd-phase-end" class="bd-input">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-outline" id="btn-bd-reset-phase">重置</button>
+              <button class="btn btn-sm btn-danger" id="btn-bd-execute-phase">执行删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="top-scroll-bar" id="top-scroll-phase">
+          <div class="top-scroll-bar-inner"></div>
+        </div>
+        <div class="table-wrapper" id="table-wrapper-phase">
+          <table id="table-phase">
+            <thead id="thead-phase"></thead>
+            <tbody id="tbody-phase"></tbody>
+          </table>
+        </div>
+        <div class="table-footer"><span id="info-phase">共 0 条记录</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== 技术要求计划表 ==================== -->
+    <div id="tab-technical" class="tab-content">
+      <div class="table-toolbar">
+        <div class="toolbar-left"><h2 style="font-size:18px;font-weight:700;">技术要求计划表</h2></div>
+        <div class="toolbar-right">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" id="search-technical" placeholder="搜索设备...">
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-template-technical">导出模板</button>
+          <button class="btn btn-sm btn-warning" id="btn-import-technical">导入Excel</button>
+          <button class="btn btn-sm btn-outline" id="btn-export-csv-technical">导出CSV</button>
+          <button class="btn btn-sm btn-outline" id="btn-export-excel-technical">导出Excel</button>
+          <button class="btn btn-sm btn-danger" id="btn-batch-delete-technical">批量删除</button>
+          <button class="btn btn-sm btn-success" id="btn-add-technical">+ 新增记录</button>
+          <input type="file" id="file-import-technical" class="hidden-input" accept=".xlsx,.xls">
+        </div>
+      </div>
+      <!-- 批量删除筛选面板 -->
+      <div id="batch-delete-panel-technical" class="table-container" style="display:none;margin-bottom:16px;">
+        <div style="padding:16px;border-bottom:1px solid var(--gray-200);">
+          <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">设备或货物名称</label>
+              <input type="text" id="bd-technical-equipment" class="bd-input" style="width:250px;" placeholder="搜索设备名称">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">设计人</label>
+              <select id="bd-technical-designer" class="bd-select" style="width:150px;">
+                <option value="">全部人员</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);">设计完成时间范围</label>
+              <div style="display:flex;gap:8px;">
+                <input type="date" id="bd-technical-start" class="bd-input">
+                <span style="color:var(--gray-400);">-</span>
+                <input type="date" id="bd-technical-end" class="bd-input">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-outline" id="btn-bd-reset-technical">重置</button>
+              <button class="btn btn-sm btn-danger" id="btn-bd-execute-technical">执行删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="top-scroll-bar" id="top-scroll-technical">
+          <div class="top-scroll-bar-inner"></div>
+        </div>
+        <div class="table-wrapper" id="table-wrapper-technical">
+          <table id="table-technical">
+            <thead id="thead-technical"></thead>
+            <tbody id="tbody-technical"></tbody>
+          </table>
+        </div>
+        <div class="table-footer"><span id="info-technical">共 0 条记录</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== 数据统计 ==================== -->
+    <div id="tab-stats" class="tab-content">
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">施工图总数</div>
+            <div class="stat-value" id="statConstruction">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">阶段设计总数</div>
+            <div class="stat-value" id="statPhase">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">技术要求总数</div>
+            <div class="stat-value" id="statTechnical">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">设计人员总数</div>
+            <div class="stat-value" id="statDesigners">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 统计分析选择区 -->
+      <div class="stats-analysis">
+        <div class="analysis-selector">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">数据分析</h3>
+          <div class="analysis-tabs">
+            <button class="analysis-tab active" data-analysis="major">按专业统计</button>
+            <button class="analysis-tab" data-analysis="designer">按人员统计</button>
+            <button class="analysis-tab" data-analysis="project">按项目统计</button>
+            <button class="analysis-tab" data-analysis="time">按时间趋势</button>
+          </div>
+          <div class="analysis-filters" id="analysisFilters">
+            <!-- 动态生成筛选条件 -->
+          </div>
+          <button class="btn btn-sm btn-primary" id="btnRunAnalysis" style="width:auto;padding:8px 24px;margin-top:12px;">开始分析</button>
+        </div>
+        <div class="analysis-result">
+          <div class="chart-card" id="analysisChartCard" style="display:none;">
+            <h4 id="analysisChartTitle">统计图表</h4>
+            <div style="height:300px;position:relative;"><canvas id="analysisChart"></canvas></div>
+          </div>
+          <div class="table-container" id="analysisTableCard" style="display:none;margin-top:16px;">
+            <div class="table-scroll">
+              <table id="analysisTable">
+                <thead id="analysisTableHead"></thead>
+                <tbody id="analysisTableBody"></tbody>
+              </table>
+            </div>
+            <div class="table-footer" id="analysisTableFooter"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 设计人员管理 ==================== -->
+    <div id="tab-designers" class="tab-content">
+      <div class="table-toolbar">
+        <div class="toolbar-left"><h2 style="font-size:18px;font-weight:700;">设计人员管理</h2></div>
+        <div class="toolbar-right">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" id="search-designers" placeholder="搜索人员...">
+          </div>
+          <button class="btn btn-sm btn-outline" id="btn-template-designers">导出模板</button>
+          <button class="btn btn-sm btn-warning" id="btn-import-designers">导入Excel</button>
+          <button class="btn btn-sm btn-outline" id="btn-export-excel-designers">导出Excel</button>
+          <button class="btn btn-sm btn-success" id="btn-add-designer">+ 新增人员</button>
+          <input type="file" id="file-import-designers" class="hidden-input" accept=".xlsx,.xls">
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-wrapper" id="table-wrapper-designers">
+          <table id="table-designers">
+            <thead>
+              <tr>
+                <th style="width:50px" class="td-center">序号</th>
+                <th style="width:100px">姓名</th>
+                <th style="width:120px">所属部门</th>
+                <th style="width:100px">专业</th>
+                <th style="width:100px">职称</th>
+                <th style="width:120px">联系电话</th>
+                <th style="width:80px" class="td-center">状态</th>
+                <th style="width:140px" class="td-center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-designers"></tbody>
+          </table>
+        </div>
+        <div class="table-footer"><span id="info-designers">共 0 人</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== 专业类别维护 ==================== -->
+    <div id="tab-majors" class="tab-content">
+      <div class="table-toolbar">
+        <div class="toolbar-left"><h2 style="font-size:18px;font-weight:700;">专业类别维护</h2></div>
+        <div class="toolbar-right">
+          <button class="btn btn-sm btn-success" id="btn-add-major">+ 新增类别</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-wrapper" id="table-wrapper-majors">
+          <table id="table-majors">
+            <thead>
+              <tr>
+                <th style="width:80px" class="td-center">序号</th>
+                <th style="width:200px">专业类别名称</th>
+                <th style="width:200px" class="td-center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-majors"></tbody>
+          </table>
+        </div>
+        <div class="table-footer"><span id="info-majors">共 0 个类别</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== 用户管理 ==================== -->
+    <div id="tab-users" class="tab-content">
+      <div class="table-toolbar">
+        <div class="toolbar-left"><h2 style="font-size:18px;font-weight:700;">用户管理</h2></div>
+        <div class="toolbar-right">
+          <button class="btn btn-sm btn-warning" id="btn-sync-users">同步设计人员</button>
+          <button class="btn btn-sm btn-success" id="btn-add-user">+ 新增用户</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <div class="table-wrapper" id="table-wrapper-users">
+          <table id="table-users">
+            <thead>
+              <tr>
+                <th style="width:50px" class="td-center">序号</th>
+                <th style="width:100px">用户名</th>
+                <th style="width:120px">姓名</th>
+                <th style="width:100px">角色</th>
+                <th style="width:80px" class="td-center">状态</th>
+                <th style="width:160px">创建时间</th>
+                <th style="width:180px" class="td-center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-users"></tbody>
+          </table>
+        </div>
+        <div class="table-footer"><span id="info-users">共 0 个用户</span></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ==================== MODAL ==================== -->
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">新增记录</h3>
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-outline" id="modalCancelBtn">取消</button>
+      <button class="btn btn-sm btn-primary" id="modalSaveBtn" style="width:auto;padding:8px 24px;">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CONFIRM DIALOG ==================== -->
+<div id="confirmOverlay" class="confirm-overlay">
+  <div class="confirm-dialog">
+    <h4 id="confirmTitle">确认删除</h4>
+    <p id="confirmMsg">确定要删除这条记录吗？此操作不可撤销。</p>
+    <div class="confirm-actions">
+      <button class="btn btn-sm btn-outline" id="confirmCancelBtn">取消</button>
+      <button class="btn btn-sm btn-danger" id="confirmBtn">删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BATCH ADD MODAL ==================== -->
+<div id="batchAddOverlay" class="modal-overlay">
+  <div class="modal" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 id="batchAddTitle">批量新增记录</h3>
+      <button class="modal-close" id="batchAddCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body" id="batchAddBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-outline" id="batchAddCancelBtn">取消</button>
+      <button class="btn btn-sm btn-primary" id="batchAddSaveBtn">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== EXPORT FILTER MODAL ==================== -->
+<div id="exportFilterOverlay" class="modal-overlay">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h3 id="exportFilterTitle">导出筛选</h3>
+      <button class="modal-close" id="exportFilterCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body" id="exportFilterBody" style="padding:16px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-outline" id="exportFilterCancelBtn">取消</button>
+      <button class="btn btn-sm btn-primary" id="exportFilterSaveBtn">导出Excel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TOAST ==================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ==================== CONFIG ====================
+var API_BASE = window.location.origin;
+var currentUser = null;
+var currentTab = 'construction';
+var currentEditTable = null;
+var currentEditId = null;
+var pendingConfirmAction = null;
+var searchTimers = {};
+
+// Cached raw data for each table (used for filtering/sorting on client side)
+var tableRawData = {
+  construction: [],
+  phase: [],
+  technical: []
+};
+
+var ROLES = {
+  admin: { label: '管理员', class: 'role-admin', canEdit: true },
+  engineer: { label: '首席工程师', class: 'role-engineer', canEdit: true },
+  staff: { label: '设计人员', class: 'role-staff', canEdit: false }
+};
+
+// Filter & sort state for each table
+var filterState = {
+  construction: { filters: {}, sort: { key: null, dir: 'asc' } },
+  phase: { filters: {}, sort: { key: null, dir: 'asc' } },
+  technical: { filters: {}, sort: { key: null, dir: 'asc' } }
+};
+
+// Track open filter panels
+var openFilterPanel = null;
+
+var TABLE_CONFIG = {
+  construction: {
+    name: '施工图计划表',
+    api: '/api/construction',
+    importApi: '/api/import/construction',
+    templateApi: '/api/template/construction',
+    exportExcelApi: '/api/export-excel/construction',
+    columns: [
+      { key: 'projectName', label: '项目名称', type: 'text', required: true },
+      { key: 'unitProject', label: '单位工程名称', type: 'text', required: true },
+      { key: 'drawingContent', label: '单位工程下专业图纸内容', type: 'text' },
+      { key: 'majorCategory', label: '专业类别', type: 'select', options: ['建筑', '结构', '给排水', '暖通', '电气', '总图', '动力', '通信', '其他'] },
+      { key: 'designer', label: '设计人', type: 'designer' },
+      { key: 'completionStatus', label: '完成情况', type: 'select', options: ['未开始', '进行中', '已完成', '已延期'] },
+      { key: 'startDate', label: '计划开始时间', type: 'date' },
+      { key: 'endDate', label: '计划完成时间', type: 'date' },
+      { key: 'projectManager', label: '项目负责人', type: 'text' },
+      { key: 'remarks', label: '备注信息', type: 'text' }
+    ]
+  },
+  phase: {
+    name: '阶段设计计划表',
+    api: '/api/phase',
+    importApi: '/api/import/phase',
+    templateApi: '/api/template/phase',
+    exportExcelApi: '/api/export-excel/phase',
+    columns: [
+      { key: 'projectName', label: '工程名称', type: 'text', required: true },
+      { key: 'designPhase', label: '设计阶段', type: 'select', options: ['方案设计', '初步设计', '施工图设计', '竣工图', '其他'] },
+      { key: 'projectManager', label: '项目负责人', type: 'text' },
+      { key: 'department', label: '责任部门', type: 'text' },
+      { key: 'participatingMajors', label: '参与专业', type: 'text' },
+      { key: 'dataSubmitDate', label: '提资时间', type: 'date' },
+      { key: 'descSubmitDate', label: '说明提交时间', type: 'date' },
+      { key: 'publishDate', label: '最终出版时间', type: 'date' },
+      { key: 'remarks', label: '备注', type: 'text' }
+    ]
+  },
+  technical: {
+    name: '技术要求计划表',
+    api: '/api/technical',
+    importApi: '/api/import/technical',
+    templateApi: '/api/template/technical',
+    exportExcelApi: '/api/export-excel/technical',
+    columns: [
+      { key: 'equipmentName', label: '设备或货物名称', type: 'text', required: true },
+      { key: 'designer', label: '设计人', type: 'designer' },
+      { key: 'designCompleteDate', label: '设计完成时间', type: 'date' },
+      { key: 'purchaseDate', label: '提采购时间', type: 'date' },
+      { key: 'ownerReviewDate', label: '提业主审查时间', type: 'date' },
+      { key: 'ownerFeedbackDate', label: '业主反馈时间', type: 'date' }
+    ]
+  }
+};
+
+var DESIGNER_MAJOR_OPTIONS = ['建筑', '结构', '给排水', '暖通', '电气', '总图', '动力', '通信', '其他'];
+
+var CHART_COLORS = ['#1a73e8', '#34a853', '#ea4335', '#fbbc04', '#4285f4', '#0f9d58', '#db4437', '#f4b400', '#9334e6', '#ff6d01', '#46bdc6', '#7baaf7'];
+
+// Chart instances
+var chartInstances = {};
+
+// ==================== API HELPER ====================
+function showLoading() { document.getElementById('loadingOverlay').classList.add('show'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+async function api(method, url, data) {
+  var opts = {
+    method: method,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
+  };
+  if (data && method !== 'GET') {
+    opts.body = JSON.stringify(data);
+  }
+  try {
+    var resp = await fetch(API_BASE + url, opts);
+    if (resp.status === 401) {
+      currentUser = null;
+      document.getElementById('appContainer').style.display = 'none';
+      document.getElementById('loginPage').style.display = 'flex';
+      showToast('登录已过期，请重新登录', 'error');
+      return null;
+    }
+    var text = await resp.text();
+    try { return JSON.parse(text); } catch(e) { return { code: resp.status, msg: text }; }
+  } catch (err) {
+    showToast('网络请求失败: ' + err.message, 'error');
+    return null;
+  }
+}
+
+// ==================== AUTH ====================
+async function handleLogin() {
+  var username = document.getElementById('loginUsername').value.trim();
+  var password = document.getElementById('loginPassword').value;
+  if (!username || !password) {
+    document.getElementById('loginError').style.display = 'flex';
+    document.getElementById('loginErrorMsg').textContent = '用户名和密码不能为空';
+    return;
+  }
+  var btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+  var result = await api('POST', '/api/login', { username: username, password: password });
+  btn.disabled = false;
+  btn.textContent = '登 录';
+  if (!result) return;
+  if (result.code === 200) {
+    currentUser = result.data;
+    showApp();
+    showToast('登录成功，欢迎 ' + currentUser.realName, 'success');
+  } else {
+    document.getElementById('loginError').style.display = 'flex';
+    document.getElementById('loginErrorMsg').textContent = result.msg || '登录失败';
+  }
+}
+
+async function handleLogout() {
+  await api('POST', '/api/logout');
+  currentUser = null;
+  document.getElementById('appContainer').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+async function checkSession() {
+  var result = await api('GET', '/api/current-user');
+  if (result && result.code === 200) {
+    currentUser = result.data;
+    showApp();
+  }
+}
+
+function showApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appContainer').style.display = 'block';
+
+  var role = ROLES[currentUser.role];
+  document.getElementById('userAvatar').textContent = currentUser.realName.charAt(0);
+  document.getElementById('userName').textContent = currentUser.realName;
+  document.getElementById('userRole').textContent = role.label;
+  document.getElementById('userRole').className = 'role-badge ' + role.class;
+
+  var canEdit = role.canEdit;
+  ['construction', 'phase', 'technical'].forEach(function(t) {
+    var btn = document.getElementById('btn-add-' + t);
+    if (btn) btn.style.display = canEdit ? '' : 'none';
+  });
+
+  // Show designer management for admin/engineer
+  document.getElementById('tabDesignerBtn').style.display =
+    (currentUser.role === 'admin' || currentUser.role === 'engineer') ? '' : 'none';
+
+  // Show major category management for admin/engineer
+  document.getElementById('tabMajorBtn').style.display =
+    (currentUser.role === 'admin' || currentUser.role === 'engineer') ? '' : 'none';
+
+  // Show user management tab for admin only
+  document.getElementById('tabUserBtn').style.display = currentUser.role === 'admin' ? '' : 'none';
+
+  // Build dynamic theads for filterable tables
+  ['construction', 'phase', 'technical'].forEach(function(t) {
+    buildTableHead(t);
+  });
+
+  loadCurrentTab();
+}
+
+// ==================== TAB SWITCHING ====================
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(function(tc) { tc.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  closeAllFilterPanels();
+  loadCurrentTab();
+}
+
+function loadCurrentTab() {
+  if (currentTab === 'users') {
+    loadUsers();
+  } else if (currentTab === 'stats') {
+    loadStats();
+  } else if (currentTab === 'designers') {
+    loadDesigners();
+  } else if (currentTab === 'majors') {
+    loadMajorCategories();
+  } else {
+    loadTable(currentTab);
+  }
+}
+
+// ==================== TABLE HEAD BUILDER (with filter/sort) ====================
+function buildTableHead(table) {
+  var config = TABLE_CONFIG[table];
+  var thead = document.getElementById('thead-' + table);
+  var html = '<tr>';
+  html += '<th style="width:50px" class="td-center">序号</th>';
+  config.columns.forEach(function(col) {
+    var isDate = col.type === 'date';
+    var fs = filterState[table];
+    var hasFilter = fs.filters[col.key] !== undefined;
+    var isSortActive = fs.sort.key === col.key;
+    var sortDir = isSortActive ? fs.sort.dir : null;
+
+    html += '<th style="position:relative;">';
+    html += '<div class="th-wrapper">';
+    html += '<span class="th-sort-text" data-table="' + table + '" data-col="' + col.key + '">' + col.label + '</span>';
+    html += '<span class="th-sort-icon">';
+    html += '<span class="sort-up' + (isSortActive && sortDir === 'asc' ? ' sort-active' : '') + '" data-table="' + table + '" data-col="' + col.key + '" data-dir="asc">&#9650;</span>';
+    html += '<span class="sort-down' + (isSortActive && sortDir === 'desc' ? ' sort-active' : '') + '" data-table="' + table + '" data-col="' + col.key + '" data-dir="desc">&#9660;</span>';
+    html += '</span>';
+    html += '<button class="th-filter-btn' + (hasFilter ? ' has-filter' : '') + '" data-table="' + table + '" data-col="' + col.key + '" data-coltype="' + (isDate ? 'date' : 'text') + '">';
+    html += '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>';
+    html += '</button>';
+    html += '</div>';
+    html += '</th>';
+  });
+  html += '<th style="width:100px" class="td-center">操作</th>';
+  html += '</tr>';
+  thead.innerHTML = html;
+}
+
+// ==================== FILTER PANEL ====================
+function showFilterPanel(table, colKey, colType, btnEl) {
+  closeAllFilterPanels();
+  var btnRect = btnEl.getBoundingClientRect();
+  var panel = document.createElement('div');
+  panel.className = 'filter-panel show';
+  panel.id = 'filter-panel-active';
+  document.body.appendChild(panel);
+
+  // Position the panel below the button
+  panel.style.left = btnRect.left + 'px';
+  panel.style.top = (btnRect.bottom + 5) + 'px';
+
+  if (colType === 'date') {
+    var fs = filterState[table];
+    var existing = fs.filters[colKey] || {};
+    panel.innerHTML =
+      '<div class="filter-date-range">' +
+        '<label>开始日期</label>' +
+        '<input type="date" id="filter-date-start" value="' + (existing.start || '') + '">' +
+        '<label>结束日期</label>' +
+        '<input type="date" id="filter-date-end" value="' + (existing.end || '') + '">' +
+        '<div class="filter-date-actions">' +
+          '<button class="btn btn-sm btn-primary" id="filter-date-apply" style="width:auto;">确定</button>' +
+          '<button class="btn btn-sm btn-outline" id="filter-date-clear" style="width:auto;">清除</button>' +
+        '</div>' +
+      '</div>';
+
+    document.getElementById('filter-date-apply').addEventListener('click', function() {
+      var start = document.getElementById('filter-date-start').value;
+      var end = document.getElementById('filter-date-end').value;
+      if (start || end) {
+        filterState[table].filters[colKey] = { start: start, end: end };
+      } else {
+        delete filterState[table].filters[colKey];
+      }
+      closeAllFilterPanels();
+      applyFiltersAndRender(table);
+      updateFilterIndicators(table);
+    });
+
+    document.getElementById('filter-date-clear').addEventListener('click', function() {
+      delete filterState[table].filters[colKey];
+      closeAllFilterPanels();
+      applyFiltersAndRender(table);
+      updateFilterIndicators(table);
+    });
+  } else {
+    // Text column: show unique values from data filtered by OTHER columns (linked filter)
+    var fs = filterState[table];
+    var otherFilters = {};
+    Object.keys(fs.filters).forEach(function(k) {
+      if (k !== colKey) otherFilters[k] = fs.filters[k];
+    });
+
+    // Get data filtered by other columns first
+    var filteredData = tableRawData[table].slice();
+    Object.keys(otherFilters).forEach(function(col) {
+      var fv = otherFilters[col];
+      if (fv === undefined) return;
+      if (typeof fv === 'object' && (fv.start || fv.end)) {
+        filteredData = filteredData.filter(function(row) {
+          var cellVal = (row[col] || '').toString();
+          if (!cellVal) return false;
+          if (fv.start && cellVal < fv.start) return false;
+          if (fv.end && cellVal > fv.end) return false;
+          return true;
+        });
+      } else {
+        filteredData = filteredData.filter(function(row) {
+          return (row[col] || '').toString() === fv;
+        });
+      }
+    });
+
+    var uniqueVals = [];
+    var seen = {};
+    filteredData.forEach(function(row) {
+      var v = (row[colKey] || '').toString().trim();
+      if (v && !seen[v]) {
+        seen[v] = true;
+        uniqueVals.push(v);
+      }
+    });
+
+    var currentFilter = fs.filters[colKey];
+
+    var html = '<div class="filter-panel-header">筛选: ' + TABLE_CONFIG[table].columns.find(function(c){return c.key===colKey;}).label + '</div>';
+    html += '<div class="filter-item' + (!currentFilter ? ' active' : '') + '" data-filter-val="">全部</div>';
+    uniqueVals.forEach(function(val) {
+      html += '<div class="filter-item' + (currentFilter === val ? ' active' : '') + '" data-filter-val="' + escapeHtml(val) + '">' + escapeHtml(val) + '</div>';
+    });
+    panel.innerHTML = html;
+
+    panel.querySelectorAll('.filter-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var val = this.getAttribute('data-filter-val');
+        if (val === '') {
+          delete filterState[table].filters[colKey];
+        } else {
+          filterState[table].filters[colKey] = val;
+        }
+        closeAllFilterPanels();
+        applyFiltersAndRender(table);
+        updateFilterIndicators(table);
+      });
+    });
+  }
+}
+
+function closeAllFilterPanels() {
+  var existing = document.getElementById('filter-panel-active');
+  if (existing) existing.remove();
+  openFilterPanel = null;
+}
+
+function updateFilterIndicators(table) {
+  var fs = filterState[table];
+  document.querySelectorAll('#table-' + table + ' .th-filter-btn').forEach(function(btn) {
+    var col = btn.getAttribute('data-col');
+    if (fs.filters[col] !== undefined) {
+      btn.classList.add('has-filter');
+    } else {
+      btn.classList.remove('has-filter');
+    }
+  });
+}
+
+// ==================== FILTER & SORT LOGIC ====================
+function getFilteredSortedData(table) {
+  var data = tableRawData[table].slice();
+  var fs = filterState[table];
+
+  // Apply filters
+  Object.keys(fs.filters).forEach(function(colKey) {
+    var filterVal = fs.filters[colKey];
+    if (filterVal === undefined) return;
+
+    // Check if it's a date range filter
+    if (typeof filterVal === 'object' && (filterVal.start || filterVal.end)) {
+      data = data.filter(function(row) {
+        var cellVal = (row[colKey] || '').toString();
+        if (!cellVal) return false;
+        if (filterVal.start && cellVal < filterVal.start) return false;
+        if (filterVal.end && cellVal > filterVal.end) return false;
+        return true;
+      });
+    } else {
+      // Exact match filter
+      data = data.filter(function(row) {
+        return (row[colKey] || '').toString() === filterVal;
+      });
+    }
+  });
+
+  // Apply sort
+  if (fs.sort.key) {
+    var sortKey = fs.sort.key;
+    var dir = fs.sort.dir;
+    data.sort(function(a, b) {
+      var va = (a[sortKey] || '').toString();
+      var vb = (b[sortKey] || '').toString();
+      // Try numeric sort
+      var na = parseFloat(va);
+      var nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb)) {
+        return dir === 'asc' ? na - nb : nb - na;
+      }
+      // Date sort
+      if (va.match(/^\d{4}-\d{2}-\d{2}/) && vb.match(/^\d{4}-\d{2}-\d{2}/)) {
+        return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+      }
+      // String sort
+      var cmp = va.localeCompare(vb, 'zh-CN');
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  return data;
+}
+
+function applyFiltersAndRender(table) {
+  var data = getFilteredSortedData(table);
+  renderTableBody(table, data);
+}
+
+function initTopScrollBar(table) {
+  var tableWrapper = document.getElementById('table-wrapper-' + table);
+  var topScroll = document.getElementById('top-scroll-' + table);
+  var innerEl = topScroll ? topScroll.querySelector('.top-scroll-bar-inner') : null;
+
+  if (!tableWrapper || !topScroll || !innerEl) return;
+
+  // 设置内部元素宽度与表格宽度相同
+  innerEl.style.width = tableWrapper.scrollWidth + 'px';
+  topScroll.style.visibility = 'visible';
+
+  // 同步滚动
+  var isSyncing = false;
+
+  topScroll.addEventListener('scroll', function() {
+    if (!isSyncing) {
+      isSyncing = true;
+      tableWrapper.scrollLeft = topScroll.scrollLeft;
+      isSyncing = false;
+    }
+  });
+
+  tableWrapper.addEventListener('scroll', function() {
+    if (!isSyncing) {
+      isSyncing = true;
+      topScroll.scrollLeft = tableWrapper.scrollLeft;
+      isSyncing = false;
+    }
+  });
+}
+
+// 专业类别管理API调用
+async function apiGetMajorCategories() {
+  return await api('GET', '/api/major-categories');
+}
+
+async function apiAddMajorCategory(name) {
+  return await api('POST', '/api/major-categories', { name: name });
+}
+
+async function apiDeleteMajorCategory(id) {
+  return await api('DELETE', '/api/major-categories/' + id);
+}
+
+// ==================== TABLE LOADING ====================
+async function loadTable(table) {
+  var config = TABLE_CONFIG[table];
+  var keyword = document.getElementById('search-' + table).value.trim();
+  var url = config.api + (keyword ? '?keyword=' + encodeURIComponent(keyword) : '');
+  var result = await api('GET', url);
+  if (!result || result.code !== 200) return;
+
+  tableRawData[table] = result.data;
+  applyFiltersAndRender(table);
+  // 初始化顶部滚动条
+  initTopScrollBar(table);
+}
+
+function renderTableBody(table, data) {
+  var config = TABLE_CONFIG[table];
+  var tbody = document.getElementById('tbody-' + table);
+  var canEdit = currentUser && ROLES[currentUser.role].canEdit;
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="' + (config.columns.length + 2) + '" class="td-center" style="padding:40px;color:var(--gray-500);">暂无数据</td></tr>';
+  } else {
+    tbody.innerHTML = data.map(function(row, idx) {
+      var cells = '<td class="td-center">' + (idx + 1) + '</td>';
+      config.columns.forEach(function(col) {
+        var val = row[col.key] || '';
+        // 处理日期格式，只显示年月日
+        if (col.type === 'date' && val) {
+          val = val.split('T')[0].split(' ')[0];
+        }
+        if (col.key === 'completionStatus') {
+          var statusMap = { '已完成': 'status-completed', '进行中': 'status-in-progress', '未开始': 'status-pending', '已延期': 'status-delayed' };
+          val = val ? '<span class="status-badge ' + (statusMap[val] || '') + '">' + escapeHtml(val) + '</span>' : '';
+        } else {
+          val = escapeHtml(val.toString());
+        }
+        cells += '<td>' + val + '</td>';
+      });
+      if (canEdit) {
+        cells += '<td class="td-center td-actions">' +
+          '<button class="btn btn-sm btn-outline" data-action="edit" data-table="' + table + '" data-id="' + row.id + '" style="margin-right:4px;">编辑</button>' +
+          '<button class="btn btn-sm btn-danger" data-action="delete" data-table="' + table + '" data-id="' + row.id + '">删除</button></td>';
+      } else {
+        cells += '<td class="td-center" style="color:var(--gray-400);font-size:12px;">仅查看</td>';
+      }
+      return '<tr>' + cells + '</tr>';
+    }).join('');
+  }
+  document.getElementById('info-' + table).textContent = '共 ' + data.length + ' 条记录';
+}
+
+// ==================== MODAL (Add/Edit Records) ====================
+function openAddModal(table) {
+  currentEditTable = table;
+  currentEditId = null;
+  document.getElementById('modalTitle').textContent = '新增 - ' + TABLE_CONFIG[table].name;
+  renderModalForm(table, {});
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function openEditModal(table, id) {
+  currentEditTable = table;
+  currentEditId = id;
+  var config = TABLE_CONFIG[table];
+  api('GET', config.api).then(function(result) {
+    if (!result || result.code !== 200) return;
+    var record = result.data.find(function(r) { return r.id === id; });
+    if (!record) return;
+    document.getElementById('modalTitle').textContent = '编辑 - ' + config.name;
+    renderModalForm(table, record);
+    document.getElementById('modalOverlay').classList.add('show');
+  });
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  currentEditTable = null;
+  currentEditId = null;
+}
+
+// ==================== EXPORT FILTER ====================
+var currentExportTable = null;
+
+function openExportFilterModal(table) {
+  currentExportTable = table;
+  document.getElementById('exportFilterOverlay').classList.add('show');
+  loadExportFilterOptions(table);
+}
+
+function closeExportFilterModal() {
+  document.getElementById('exportFilterOverlay').classList.remove('show');
+  currentExportTable = null;
+}
+
+function loadExportFilterOptions(table) {
+  var html = '';
+  
+  html += '<div class="form-group">';
+  html += '<label style="font-weight:600;margin-bottom:8px;display:block;">按项目名称筛选</label>';
+  html += '<select id="exportFilterProject" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:var(--radius);">';
+  html += '<option value="">全部项目</option>';
+  
+  var projects = [...new Set(tableRawData[table].map(function(r) { return r.projectName; }).filter(Boolean))];
+  projects.sort();
+  projects.forEach(function(p) {
+    html += '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
+  });
+  html += '</select>';
+  html += '</div>';
+  
+  html += '<div class="form-group" style="margin-top:16px;">';
+  html += '<label style="font-weight:600;margin-bottom:8px;display:block;">按专业类别筛选</label>';
+  html += '<select id="exportFilterMajor" style="width:100%;padding:8px;border:1px solid var(--gray-300);border-radius:var(--radius);">';
+  html += '<option value="">全部专业</option>';
+  
+  var majors = ['建筑', '结构', '给排水', '暖通', '电气', '总图', '动力', '通信'];
+  majors.forEach(function(m) {
+    html += '<option value="' + escapeHtml(m) + '">' + escapeHtml(m) + '</option>';
+  });
+  html += '</select>';
+  html += '</div>';
+  
+  document.getElementById('exportFilterBody').innerHTML = html;
+}
+
+function executeExportWithFilter() {
+  var table = currentExportTable;
+  if (!table) return;
+  
+  var project = document.getElementById('exportFilterProject').value;
+  var major = document.getElementById('exportFilterMajor').value;
+  
+  var params = [];
+  if (project) {
+    params.push('project=' + encodeURIComponent(project));
+  }
+  if (major) {
+    params.push('major=' + encodeURIComponent(major));
+  }
+  
+  var url = API_BASE + '/api/export-excel/' + table;
+  if (params.length > 0) {
+    url += '?' + params.join('&');
+  }
+  
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('Excel导出已开始', 'info');
+  closeExportFilterModal();
+}
+
+function renderModalForm(table, record) {
+  var config = TABLE_CONFIG[table];
+  var html = '';
+  config.columns.forEach(function(col, i) {
+    var val = record[col.key] || '';
+    var req = col.required ? ' required' : '';
+    if (i % 2 === 0) html += '<div class="form-row">';
+    html += '<div class="form-group">';
+    html += '<label>' + col.label + (col.required ? ' <span style="color:var(--danger)">*</span>' : '') + '</label>';
+
+    if (col.type === 'designer') {
+      html += '<div class="autocomplete-wrapper">';
+      html += '<input type="text" id="field-' + col.key + '" value="' + escapeHtml(val) + '" placeholder="请输入设计人姓名" autocomplete="off">';
+      html += '<div class="autocomplete-list" id="ac-list-' + col.key + '"></div>';
+      html += '</div>';
+    } else if (col.type === 'select') {
+      html += '<select id="field-' + col.key + '"' + req + '><option value="">请选择</option>';
+      if (col.key === 'majorCategory' && table === 'construction') {
+        // 专业类别动态加载
+        html += '</select>';
+        html += '<div id="major-category-loader" data-value="' + escapeHtml(val) + '"></div>';
+      } else {
+        col.options.forEach(function(opt) {
+          html += '<option value="' + opt + '"' + (val === opt ? ' selected' : '') + '>' + opt + '</option>';
+        });
+        html += '</select>';
+      }
+    } else {
+      html += '<input type="' + col.type + '" id="field-' + col.key + '" value="' + escapeHtml(val) + '"' + req + ' placeholder="请输入' + col.label + '">';
+    }
+
+    html += '</div>';
+    if (i % 2 === 1 || i === config.columns.length - 1) html += '</div>';
+  });
+  document.getElementById('modalBody').innerHTML = html;
+
+  // Bind autocomplete events for designer fields
+  config.columns.forEach(function(col) {
+    if (col.type === 'designer') {
+      bindDesignerAutocomplete(col.key);
+    }
+  });
+
+  // Load major categories dynamically for construction table
+  if (table === 'construction') {
+    loadMajorCategoriesForSelect(record.majorCategory || '');
+  }
+}
+
+// 动态加载专业类别到下拉选择框
+async function loadMajorCategoriesForSelect(selectedValue) {
+  var result = await apiGetMajorCategories();
+  if (!result || result.code !== 200) return;
+
+  var select = document.getElementById('field-majorCategory');
+  var loader = document.getElementById('major-category-loader');
+  if (!select || !loader) return;
+
+  var categories = result.data || [];
+  var html = '<select id="field-majorCategory"><option value="">请选择</option>';
+  categories.forEach(function(c) {
+    html += '<option value="' + escapeHtml(c.name || '') + '"' + (selectedValue === c.name ? ' selected' : '') + '>' + escapeHtml(c.name || '') + '</option>';
+  });
+  html += '</select>';
+  select.outerHTML = html;
+}
+
+// ==================== DESIGNER AUTOCOMPLETE ====================
+var acTimers = {};
+
+function bindDesignerAutocomplete(fieldKey) {
+  var input = document.getElementById('field-' + fieldKey);
+  var list = document.getElementById('ac-list-' + fieldKey);
+  if (!input || !list) return;
+
+  input.addEventListener('input', function() {
+    var keyword = this.value.trim();
+    clearTimeout(acTimers[fieldKey]);
+    if (!keyword) {
+      list.classList.remove('show');
+      list.innerHTML = '';
+      return;
+    }
+    acTimers[fieldKey] = setTimeout(function() {
+      fetchDesignerSuggestions(keyword, list, input);
+    }, 300);
+  });
+
+  input.addEventListener('focus', function() {
+    var keyword = this.value.trim();
+    if (keyword) {
+      clearTimeout(acTimers[fieldKey]);
+      acTimers[fieldKey] = setTimeout(function() {
+        fetchDesignerSuggestions(keyword, list, input);
+      }, 100);
+    }
+  });
+}
+
+async function fetchDesignerSuggestions(keyword, listEl, inputEl) {
+  try {
+    var resp = await fetch(API_BASE + '/api/designers/suggestions?keyword=' + encodeURIComponent(keyword), { credentials: 'include' });
+    var data = await resp.json();
+    if (data && data.code === 200 && data.data && data.data.length > 0) {
+      listEl.innerHTML = data.data.map(function(d) {
+        var detail = (d.department || '') + (d.major ? ' - ' + d.major : '');
+        return '<div class="autocomplete-item" data-name="' + escapeHtml(d.name || '') + '">' +
+          '<span class="ac-name">' + escapeHtml(d.name || '') + '</span>' +
+          '<span class="ac-detail">' + escapeHtml(detail) + '</span>' +
+          '</div>';
+      }).join('');
+      listEl.classList.add('show');
+
+      listEl.querySelectorAll('.autocomplete-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+          inputEl.value = this.getAttribute('data-name');
+          listEl.classList.remove('show');
+          listEl.innerHTML = '';
+        });
+      });
+    } else {
+      listEl.classList.remove('show');
+      listEl.innerHTML = '';
+    }
+  } catch(e) {
+    // silently fail
+  }
+}
+
+// Close autocomplete on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.autocomplete-wrapper')) {
+    document.querySelectorAll('.autocomplete-list.show').forEach(function(el) {
+      el.classList.remove('show');
+    });
+  }
+});
+
+async function loadDesignerOptions(selectId) {
+  var select = document.getElementById(selectId);
+  if (!select) return;
+  var result = await api('GET', '/api/designers');
+  if (result && result.code === 200) {
+    var html = '<option value="">请选择</option>';
+    result.data.forEach(function(d) {
+      html += '<option value="' + escapeHtml(d.name || '') + '">' + escapeHtml(d.name || '') + '</option>';
+    });
+    select.innerHTML = html;
+  }
+}
+
+async function saveRecord() {
+  var table = currentEditTable;
+  var config = TABLE_CONFIG[table];
+  var record = {};
+  var valid = true;
+
+  config.columns.forEach(function(col) {
+    var el = document.getElementById('field-' + col.key);
+    if (el) {
+      record[col.key] = el.value.trim();
+      if (col.required && !record[col.key]) {
+        el.style.borderColor = 'var(--danger)';
+        valid = false;
+      } else {
+        el.style.borderColor = '';
+      }
+    }
+  });
+
+  if (!valid) { showToast('请填写所有必填项', 'error'); return; }
+
+  showLoading();
+  var result;
+  if (currentEditId) {
+    result = await api('PUT', config.api + '/' + currentEditId, record);
+  } else {
+    result = await api('POST', config.api, record);
+  }
+  hideLoading();
+
+  if (result && result.code === 200) {
+    showToast(currentEditId ? '记录已更新' : '记录已添加', 'success');
+    closeModal();
+    loadTable(table);
+  } else {
+    showToast(result ? result.msg : '操作失败', 'error');
+  }
+}
+
+// ==================== DELETE ====================
+function deleteRecord(table, id) {
+  pendingConfirmAction = async function() {
+    showLoading();
+    var result = await api('DELETE', TABLE_CONFIG[table].api + '/' + id);
+    hideLoading();
+    if (result && result.code === 200) {
+      showToast('记录已删除', 'success');
+      loadTable(table);
+    } else {
+      showToast(result ? result.msg : '删除失败', 'error');
+    }
+  };
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+function confirmAction() {
+  if (pendingConfirmAction) { pendingConfirmAction(); pendingConfirmAction = null; }
+  closeConfirm();
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('show');
+  // 恢复确认按钮的默认样式
+  document.getElementById('confirmBtn').textContent = '删除';
+  document.getElementById('confirmBtn').className = 'btn btn-sm btn-danger';
+  document.getElementById('confirmCancelBtn').textContent = '取消';
+  pendingConfirmAction = null;
+  // 如果有待处理的导入数据，点击取消时跳过重复并导入
+  if (pendingImportData) {
+    uploadWithOverwrite(pendingImportData.table, pendingImportData.file, false);
+  }
+}
+
+// ==================== IMPORT / EXPORT ====================
+function downloadTemplate(table) {
+  var config = TABLE_CONFIG[table];
+  var url = API_BASE + config.templateApi;
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('模板下载已开始', 'info');
+}
+
+function triggerImport(table) {
+  var fileInput = document.getElementById('file-import-' + table);
+  fileInput.value = '';
+  fileInput.click();
+}
+
+var pendingImportData = null;
+
+function handleImport(table, fileInput) {
+  var file = fileInput.files[0];
+  if (!file) return;
+
+  var config = TABLE_CONFIG[table];
+  var formData = new FormData();
+  formData.append('file', file);
+
+  showLoading();
+  fetch(API_BASE + config.importApi, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData
+  }).then(function(resp) {
+    return resp.json();
+  }).then(function(result) {
+    hideLoading();
+    if (result && result.code === 300 && result.data && result.data.duplicates) {
+      pendingImportData = {
+      table: table,
+      file: file,
+      duplicates: result.data.duplicates
+      };
+      var duplicateList = result.data.duplicates.slice(0, 5).map(function(d) {
+        return '行' + d.row + ': ' + d.project + ' - ' + d.unit;
+      }).join('; ');
+      if (result.data.duplicates.length > 5) {
+        duplicateList += '... (共' + result.data.duplicates.length + '条)';
+      }
+      document.getElementById('confirmTitle').textContent = '发现重复记录';
+      document.getElementById('confirmMsg').innerHTML =
+        '发现' + result.data.duplicates.length + '条重复记录:\n' + duplicateList + '\n\n是否覆盖这些重复记录？';
+      document.getElementById('confirmBtn').textContent = '覆盖';
+      document.getElementById('confirmBtn').className = 'btn btn-sm btn-primary';
+      document.getElementById('confirmCancelBtn').textContent = '跳过';
+      pendingConfirmAction = function() {
+        uploadWithOverwrite(table, file, true);
+      };
+      document.getElementById('confirmOverlay').classList.add('show');
+    } else if (result && result.code === 200) {
+      var msg = '导入成功';
+      if (result.data) {
+        if (result.data.success !== undefined) msg += '：新增 ' + result.data.success + ' 条';
+        if (result.data.updated !== undefined && result.data.updated > 0) msg += '，更新 ' + result.data.updated + ' 条';
+        if (result.data.fail !== undefined && result.data.fail > 0) msg += '，失败 ' + result.data.fail + ' 条';
+      }
+      showToast(msg, 'success');
+      loadTable(table);
+    } else {
+      showToast(result ? (result.msg || '导入失败') : '导入失败', 'error');
+    }
+  }).catch(function(err) {
+    hideLoading();
+    showToast('导入失败: ' + err.message, 'error');
+  });
+}
+
+function uploadWithOverwrite(table, file, overwrite) {
+  var config = TABLE_CONFIG[table];
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('overwrite', overwrite ? 'true' : 'false');
+
+  showLoading();
+  fetch(API_BASE + config.importApi, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData
+  }).then(function(resp) {
+    return resp.json();
+  }).then(function(result) {
+    hideLoading();
+    if (result && result.code === 200) {
+      var msg = '导入成功';
+      if (result.data) {
+        if (result.data.success !== undefined) msg += '：新增 ' + result.data.success + ' 条';
+        if (result.data.updated !== undefined && result.data.updated > 0) msg += '，更新 ' + result.data.updated + ' 条';
+        if (result.data.fail !== undefined && result.data.fail > 0) msg += '，失败 ' + result.data.fail + ' 条';
+      }
+      showToast(msg, 'success');
+      loadTable(table);
+    } else {
+      showToast(result ? (result.msg || '导入失败') : '导入失败', 'error');
+    }
+    pendingImportData = null;
+  }).catch(function(err) {
+    hideLoading();
+    showToast('导入失败: ' + err.message, 'error');
+    pendingImportData = null;
+  });
+}
+
+function downloadExportExcel(table) {
+  var config = TABLE_CONFIG[table];
+  var keyword = document.getElementById('search-' + table).value.trim();
+  var url = API_BASE + config.exportExcelApi;
+  if (keyword) url += '?keyword=' + encodeURIComponent(keyword);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('Excel导出已开始', 'info');
+}
+
+async function exportCSV(table) {
+  var config = TABLE_CONFIG[table];
+  var result = await api('GET', config.api);
+  if (!result || result.code !== 200) return;
+
+  var data = result.data;
+  var csv = '\uFEFF';
+  csv += '序号,' + config.columns.map(function(c) { return c.label; }).join(',') + '\n';
+  data.forEach(function(row, idx) {
+    csv += (idx + 1) + ',' + config.columns.map(function(c) {
+      var val = (row[c.key] || '').toString().replace(/"/g, '""');
+      return '"' + val + '"';
+    }).join(',') + '\n';
+  });
+
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = config.name + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast('导出成功', 'success');
+}
+
+// ==================== USER MANAGEMENT ====================
+async function loadUsers() {
+  var result = await api('GET', '/api/users');
+  if (!result || result.code !== 200) return;
+
+  var users = result.data;
+  var tbody = document.getElementById('tbody-users');
+  var roleLabels = { admin: '管理员', engineer: '首席工程师', staff: '设计人员' };
+  var roleClasses = { admin: 'role-admin', engineer: 'role-engineer', staff: 'role-staff' };
+
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="td-center" style="padding:40px;color:var(--gray-500);">暂无用户</td></tr>';
+  } else {
+    tbody.innerHTML = users.map(function(u, idx) {
+      return '<tr>' +
+        '<td class="td-center">' + (idx + 1) + '</td>' +
+        '<td>' + escapeHtml(u.username) + '</td>' +
+        '<td>' + escapeHtml(u.realName) + '</td>' +
+        '<td><span class="role-badge ' + roleClasses[u.role] + '">' + roleLabels[u.role] + '</span></td>' +
+        '<td class="td-center">' + (u.isActive ? '<span style="color:var(--success);">启用</span>' : '<span style="color:var(--danger);">禁用</span>') + '</td>' +
+        '<td>' + (u.createdAt || '') + '</td>' +
+        '<td class="td-actions td-center">' +
+          '<button class="btn btn-sm btn-outline" data-action="edit-user" data-id="' + u.id + '" style="margin-right:4px;">编辑</button>' +
+          (u.id !== currentUser.id ? '<button class="btn btn-sm btn-danger" data-action="delete-user" data-id="' + u.id + '">删除</button>' : '') +
+        '</td></tr>';
+    }).join('');
+  }
+  document.getElementById('info-users').textContent = '共 ' + users.length + ' 个用户';
+}
+
+function openAddUserModal() {
+  currentEditTable = 'user';
+  currentEditId = null;
+  document.getElementById('modalTitle').textContent = '新增用户';
+  document.getElementById('modalBody').innerHTML =
+    '<div class="form-row"><div class="form-group"><label>用户名 <span style="color:var(--danger)">*</span></label><input type="text" id="field-username" placeholder="请输入用户名"></div>' +
+    '<div class="form-group"><label>姓名 <span style="color:var(--danger)">*</span></label><input type="text" id="field-realName" placeholder="请输入姓名"></div></div>' +
+    '<div class="form-row"><div class="form-group"><label>密码 <span style="color:var(--danger)">*</span></label><input type="password" id="field-password" placeholder="请输入密码"></div>' +
+    '<div class="form-group"><label>角色</label><select id="field-role"><option value="staff">设计人员</option><option value="engineer">首席工程师</option><option value="admin">管理员</option></select></div></div>';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function openEditUserModal(userId) {
+  currentEditTable = 'user';
+  currentEditId = userId;
+  api('GET', '/api/users').then(function(result) {
+    if (!result || result.code !== 200) return;
+    var user = result.data.find(function(u) { return u.id === userId; });
+    if (!user) return;
+    document.getElementById('modalTitle').textContent = '编辑用户 - ' + user.realName;
+    document.getElementById('modalBody').innerHTML =
+      '<div class="form-row"><div class="form-group"><label>用户名</label><input type="text" id="field-username" value="' + escapeHtml(user.username) + '" disabled style="background:var(--gray-100);"></div>' +
+      '<div class="form-group"><label>姓名 <span style="color:var(--danger)">*</span></label><input type="text" id="field-realName" value="' + escapeHtml(user.realName) + '"></div></div>' +
+      '<div class="form-row"><div class="form-group"><label>新密码（留空则不修改）</label><input type="password" id="field-password" placeholder="留空则不修改密码"></div>' +
+      '<div class="form-group"><label>角色</label><select id="field-role"><option value="staff"' + (user.role === 'staff' ? ' selected' : '') + '>设计人员</option><option value="engineer"' + (user.role === 'engineer' ? ' selected' : '') + '>首席工程师</option><option value="admin"' + (user.role === 'admin' ? ' selected' : '') + '>管理员</option></select></div></div>' +
+      '<div class="form-row full"><div class="form-group"><label>状态</label><select id="field-isActive"><option value="true"' + (user.isActive ? ' selected' : '') + '>启用</option><option value="false"' + (!user.isActive ? ' selected' : '') + '>禁用</option></select></div></div>';
+    document.getElementById('modalOverlay').classList.add('show');
+  });
+}
+
+async function saveUser() {
+  var username = document.getElementById('field-username').value.trim();
+  var realName = document.getElementById('field-realName').value.trim();
+  var password = document.getElementById('field-password').value;
+  var role = document.getElementById('field-role').value;
+
+  if (!realName) { showToast('姓名不能为空', 'error'); return; }
+
+  showLoading();
+  var result;
+  if (currentEditId) {
+    var data = { realName: realName, role: role };
+    if (password) data.password = password;
+    var isActiveEl = document.getElementById('field-isActive');
+    if (isActiveEl) data.isActive = isActiveEl.value === 'true';
+    result = await api('PUT', '/api/users/' + currentEditId, data);
+  } else {
+    if (!username || !password) { hideLoading(); showToast('用户名和密码不能为空', 'error'); return; }
+    result = await api('POST', '/api/users', { username: username, password: password, realName: realName, role: role });
+  }
+  hideLoading();
+
+  if (result && result.code === 200) {
+    showToast(currentEditId ? '用户已更新' : '用户已创建', 'success');
+    closeModal();
+    loadUsers();
+  } else {
+    showToast(result ? result.msg : '操作失败', 'error');
+  }
+}
+
+function deleteUser(userId) {
+  pendingConfirmAction = async function() {
+    showLoading();
+    var result = await api('DELETE', '/api/users/' + userId);
+    hideLoading();
+    if (result && result.code === 200) {
+      showToast('用户已删除', 'success');
+      loadUsers();
+    } else {
+      showToast(result ? result.msg : '删除失败', 'error');
+    }
+  };
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+async function syncUsersFromDesigners() {
+  showLoading();
+  var result = await api('POST', '/api/users/sync-from-designers');
+  hideLoading();
+  if (result && result.code === 200) {
+    showToast(result.msg, 'success');
+    loadUsers();
+  } else {
+    showToast(result ? result.msg : '同步失败', 'error');
+  }
+}
+
+function openChangePasswordModal() {
+  document.getElementById('modalTitle').textContent = '修改密码';
+  document.getElementById('modalBody').innerHTML =
+    '<div class="form-row full">' +
+      '<div class="form-group">' +
+        '<label>原密码 <span style="color:var(--danger)">*</span></label>' +
+        '<input type="password" id="oldPassword" placeholder="请输入原密码">' +
+      '</div>' +
+    '</div>' +
+    '<div class="form-row full">' +
+      '<div class="form-group">' +
+        '<label>新密码 <span style="color:var(--danger)">*</span></label>' +
+        '<input type="password" id="newPassword" placeholder="请输入新密码（至少6位）">' +
+      '</div>' +
+    '</div>' +
+    '<div class="form-row full">' +
+      '<div class="form-group">' +
+        '<label>确认新密码 <span style="color:var(--danger)">*</span></label>' +
+        '<input type="password" id="confirmPassword" placeholder="请再次输入新密码">' +
+      '</div>' +
+    '</div>';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+async function changePassword() {
+  var oldPassword = document.getElementById('oldPassword').value.trim();
+  var newPassword = document.getElementById('newPassword').value.trim();
+  var confirmPassword = document.getElementById('confirmPassword').value.trim();
+  
+  if (!oldPassword) { showToast('请输入原密码', 'error'); return; }
+  if (!newPassword) { showToast('请输入新密码', 'error'); return; }
+  if (newPassword.length < 6) { showToast('新密码长度至少为6位', 'error'); return; }
+  if (newPassword !== confirmPassword) { showToast('两次输入的密码不一致', 'error'); return; }
+
+  showLoading();
+  var result = await api('POST', '/api/users/change-password', {
+    oldPassword: oldPassword,
+    newPassword: newPassword
+  });
+  hideLoading();
+
+  if (result && result.code === 200) {
+    showToast('密码修改成功，请重新登录', 'success');
+    closeModal();
+    setTimeout(function() {
+      localStorage.removeItem('token');
+      window.location.href = '/';
+    }, 1500);
+  } else {
+    showToast(result ? result.msg : '修改失败', 'error');
+  }
+}
+
+// ==================== DESIGNER MANAGEMENT ====================
+async function loadDesigners() {
+  var result = await api('GET', '/api/designers');
+  if (!result || result.code !== 200) return;
+
+  var designers = result.data;
+  var tbody = document.getElementById('tbody-designers');
+  var isAdminOrEngineer = currentUser && (currentUser.role === 'admin' || currentUser.role === 'engineer');
+
+  if (!designers || designers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="td-center" style="padding:40px;color:var(--gray-500);">暂无设计人员</td></tr>';
+  } else {
+    tbody.innerHTML = designers.map(function(d, idx) {
+      var statusClass = d.isActive !== false ? 'status-active' : 'status-inactive';
+      var statusText = d.isActive !== false ? '启用' : '禁用';
+      return '<tr>' +
+        '<td class="td-center">' + (idx + 1) + '</td>' +
+        '<td>' + escapeHtml(d.name || '') + '</td>' +
+        '<td>' + escapeHtml(d.department || '') + '</td>' +
+        '<td>' + escapeHtml(d.major || '') + '</td>' +
+        '<td>' + escapeHtml(d.title || '') + '</td>' +
+        '<td>' + escapeHtml(d.phone || '') + '</td>' +
+        '<td class="td-center"><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+        '<td class="td-actions td-center">' +
+          '<button class="btn btn-sm btn-outline" data-action="edit-designer" data-id="' + d.id + '" style="margin-right:4px;">编辑</button>' +
+          (isAdminOrEngineer ? '<button class="btn btn-sm btn-warning" data-action="toggle-designer" data-id="' + d.id + '" style="margin-right:4px;">' + (d.isActive !== false ? '禁用' : '启用') + '</button>' : '') +
+          (isAdminOrEngineer ? '<button class="btn btn-sm btn-danger" data-action="delete-designer" data-id="' + d.id + '">删除</button>' : '') +
+        '</td></tr>';
+    }).join('');
+  }
+  document.getElementById('info-designers').textContent = '共 ' + (designers ? designers.length : 0) + ' 人';
+}
+
+function openAddDesignerModal() {
+  currentEditTable = 'designer';
+  currentEditId = null;
+  document.getElementById('modalTitle').textContent = '新增设计人员';
+  renderDesignerForm({});
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function openEditDesignerModal(designerId) {
+  currentEditTable = 'designer';
+  currentEditId = designerId;
+  api('GET', '/api/designers').then(function(result) {
+    if (!result || result.code !== 200) return;
+    var designer = result.data.find(function(d) { return d.id === designerId; });
+    if (!designer) return;
+    document.getElementById('modalTitle').textContent = '编辑设计人员 - ' + (designer.name || '');
+    renderDesignerForm(designer);
+    document.getElementById('modalOverlay').classList.add('show');
+  });
+}
+
+function renderDesignerForm(record) {
+  var html =
+    '<div class="form-row">' +
+      '<div class="form-group"><label>姓名 <span style="color:var(--danger)">*</span></label><input type="text" id="field-d-name" value="' + escapeHtml(record.name || '') + '" placeholder="请输入姓名"></div>' +
+      '<div class="form-group"><label>所属部门</label><input type="text" id="field-d-department" value="' + escapeHtml(record.department || '') + '" placeholder="请输入所属部门"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-group"><label>专业</label><select id="field-d-major"><option value="">请选择</option>' +
+        DESIGNER_MAJOR_OPTIONS.map(function(m) { return '<option value="' + m + '"' + (record.major === m ? ' selected' : '') + '>' + m + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div class="form-group"><label>职称</label><input type="text" id="field-d-title" value="' + escapeHtml(record.title || '') + '" placeholder="请输入职称"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-group"><label>联系电话</label><input type="text" id="field-d-phone" value="' + escapeHtml(record.phone || '') + '" placeholder="请输入联系电话"></div>' +
+      '<div class="form-group"><label>状态</label><select id="field-d-isActive"><option value="true"' + (record.isActive !== false ? ' selected' : '') + '>启用</option><option value="false"' + (record.isActive === false ? ' selected' : '') + '>禁用</option></select></div>' +
+    '</div>';
+  document.getElementById('modalBody').innerHTML = html;
+}
+
+async function saveDesigner() {
+  var name = document.getElementById('field-d-name').value.trim();
+  if (!name) { showToast('姓名不能为空', 'error'); return; }
+
+  var data = {
+    name: name,
+    department: document.getElementById('field-d-department').value.trim(),
+    major: document.getElementById('field-d-major').value,
+    title: document.getElementById('field-d-title').value.trim(),
+    phone: document.getElementById('field-d-phone').value.trim(),
+    isActive: document.getElementById('field-d-isActive').value === 'true'
+  };
+
+  showLoading();
+  var result;
+  if (currentEditId) {
+    result = await api('PUT', '/api/designers/' + currentEditId, data);
+  } else {
+    result = await api('POST', '/api/designers', data);
+  }
+  hideLoading();
+
+  if (result && result.code === 200) {
+    showToast(currentEditId ? '人员已更新' : '人员已添加', 'success');
+    closeModal();
+    loadDesigners();
+  } else {
+    showToast(result ? result.msg : '操作失败', 'error');
+  }
+}
+
+function deleteDesigner(designerId) {
+  pendingConfirmAction = async function() {
+    showLoading();
+    var result = await api('DELETE', '/api/designers/' + designerId);
+    hideLoading();
+    if (result && result.code === 200) {
+      showToast('人员已删除', 'success');
+      loadDesigners();
+    } else {
+      showToast(result ? result.msg : '删除失败', 'error');
+    }
+  };
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+async function toggleDesignerActive(designerId) {
+  showLoading();
+  var result = await api('POST', '/api/designers/toggle-active/' + designerId);
+  hideLoading();
+  if (result && result.code === 200) {
+    showToast(result.msg, 'success');
+    loadDesigners();
+  } else {
+    showToast(result ? result.msg : '操作失败', 'error');
+  }
+}
+
+function exportDesignerTemplate() {
+  window.location.href = API_BASE + '/api/designers/export-template';
+}
+
+function exportDesignersExcel() {
+  window.location.href = API_BASE + '/api/designers/export-excel';
+}
+
+function triggerImportDesigners() {
+  document.getElementById('file-import-designers').click();
+}
+
+document.getElementById('file-import-designers').addEventListener('change', async function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.name.match(/\.(xlsx|xls)$/)) {
+    showToast('仅支持Excel文件（.xlsx/.xls）', 'error');
+    e.target.value = '';
+    return;
+  }
+
+  showLoading();
+  
+  var formData = new FormData();
+  formData.append('file', file);
+  
+  try {
+    var response = await fetch(API_BASE + '/api/designers/import-excel', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      },
+      body: formData
+    });
+    
+    var result = await response.json();
+    hideLoading();
+    
+    if (result.code === 200) {
+      showToast(result.msg, 'success');
+      loadDesigners();
+    } else {
+      showToast(result.msg || '导入失败', 'error');
+    }
+  } catch (err) {
+    hideLoading();
+    showToast('导入失败：' + err.message, 'error');
+  }
+  
+  e.target.value = '';
+});
+
+// ==================== MAJOR CATEGORY MANAGEMENT ====================
+
+async function loadMajorCategories() {
+  var result = await apiGetMajorCategories();
+  if (!result || result.code !== 200) return;
+
+  var categories = result.data;
+  var tbody = document.getElementById('tbody-majors');
+  var isAdminOrEngineer = currentUser && (currentUser.role === 'admin' || currentUser.role === 'engineer');
+
+  if (!categories || categories.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="td-center" style="padding:40px;color:var(--gray-500);">暂无专业类别</td></tr>';
+  } else {
+    tbody.innerHTML = categories.map(function(c, idx) {
+      return '<tr>' +
+        '<td class="td-center">' + (idx + 1) + '</td>' +
+        '<td>' + escapeHtml(c.name || '') + '</td>' +
+        '<td class="td-center">' +
+          (isAdminOrEngineer ? '<button class="btn btn-sm btn-danger" data-action="delete-major" data-id="' + c.id + '">删除</button>' : '<span style="color:var(--gray-400);font-size:12px;">仅查看</span>') +
+        '</td></tr>';
+    }).join('');
+  }
+  document.getElementById('info-majors').textContent = '共 ' + (categories ? categories.length : 0) + ' 个类别';
+}
+
+function openAddMajorModal() {
+  currentEditTable = 'major';
+  currentEditId = null;
+  document.getElementById('modalTitle').textContent = '新增专业类别';
+  document.getElementById('modalBody').innerHTML =
+    '<div class="form-row full">' +
+      '<div class="form-group">' +
+        '<label>专业类别名称 <span style="color:var(--danger)">*</span></label>' +
+        '<input type="text" id="field-major-name" placeholder="请输入专业类别名称">' +
+      '</div>' +
+    '</div>';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+async function saveMajorCategory() {
+  var name = document.getElementById('field-major-name').value.trim();
+  if (!name) { showToast('专业类别名称不能为空', 'error'); return; }
+
+  showLoading();
+  var result = await apiAddMajorCategory(name);
+  hideLoading();
+
+  if (result && result.code === 200) {
+    showToast('专业类别添加成功', 'success');
+    closeModal();
+    loadMajorCategories();
+  } else {
+    showToast(result ? result.msg : '添加失败', 'error');
+  }
+}
+
+function deleteMajorCategory(majorId) {
+  pendingConfirmAction = async function() {
+    showLoading();
+    var result = await apiDeleteMajorCategory(majorId);
+    hideLoading();
+    if (result && result.code === 200) {
+      showToast('专业类别已删除', 'success');
+      loadMajorCategories();
+    } else {
+      showToast(result ? result.msg : '删除失败', 'error');
+    }
+  };
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+// ==================== STATISTICS ====================
+var currentAnalysis = 'major';
+var filterOptions = { projects: [], majors: [], designers: [], unitProjects: [] };
+
+async function loadStats() {
+  var counts = await Promise.all([
+    api('GET', '/api/construction'),
+    api('GET', '/api/phase'),
+    api('GET', '/api/technical'),
+    api('GET', '/api/designers')
+  ]);
+  document.getElementById('statConstruction').textContent = (counts[0] && counts[0].code === 200) ? counts[0].data.length : 0;
+  document.getElementById('statPhase').textContent = (counts[1] && counts[1].code === 200) ? counts[1].data.length : 0;
+  document.getElementById('statTechnical').textContent = (counts[2] && counts[2].code === 200) ? counts[2].data.length : 0;
+  document.getElementById('statDesigners').textContent = (counts[3] && counts[3].code === 200) ? counts[3].data.length : 0;
+
+  // Load filter options
+  var optResult = await api('GET', '/api/stats/filter-options');
+  if (optResult && optResult.code === 200) {
+    filterOptions = optResult.data;
+  }
+  renderAnalysisFilters();
+}
+
+function switchAnalysis(type) {
+  currentAnalysis = type;
+  document.querySelectorAll('.analysis-tab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-analysis') === type);
+  });
+  renderAnalysisFilters();
+  // Hide previous results
+  document.getElementById('analysisChartCard').style.display = 'none';
+  document.getElementById('analysisTableCard').style.display = 'none';
+}
+
+function renderAnalysisFilters() {
+  var container = document.getElementById('analysisFilters');
+  var html = '';
+
+  if (currentAnalysis === 'major') {
+    html += '<div class="form-group"><label>专业（必选）</label><select id="af-major"><option value="">全部专业</option>';
+    filterOptions.majors.forEach(function(m) { html += '<option value="' + m + '">' + m + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>项目名称（可选）</label><select id="af-project"><option value="">全部项目</option>';
+    filterOptions.projects.forEach(function(p) { html += '<option value="' + p + '">' + p + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>计划完成时间起（可选）</label><input type="date" id="af-start"></div>';
+    html += '<div class="form-group"><label>计划完成时间止（可选）</label><input type="date" id="af-end"></div>';
+  } else if (currentAnalysis === 'designer') {
+    html += '<div class="form-group"><label>设计人员（必选）</label><select id="af-designer"><option value="">全部人员</option>';
+    filterOptions.designers.forEach(function(d) { html += '<option value="' + d + '">' + d + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>项目名称（可选）</label><select id="af-project"><option value="">全部项目</option>';
+    filterOptions.projects.forEach(function(p) { html += '<option value="' + p + '">' + p + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>计划完成时间起（可选）</label><input type="date" id="af-start"></div>';
+    html += '<div class="form-group"><label>计划完成时间止（可选）</label><input type="date" id="af-end"></div>';
+  } else if (currentAnalysis === 'project') {
+    html += '<div class="form-group"><label>项目名称（必选）</label><select id="af-project"><option value="">全部项目</option>';
+    filterOptions.projects.forEach(function(p) { html += '<option value="' + p + '">' + p + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>单位工程名称（可选）</label><select id="af-unit"><option value="">全部</option>';
+    filterOptions.unitProjects.forEach(function(u) { html += '<option value="' + u + '">' + u + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>专业（可选）</label><select id="af-major"><option value="">全部专业</option>';
+    filterOptions.majors.forEach(function(m) { html += '<option value="' + m + '">' + m + '</option>'; });
+    html += '</select></div>';
+  } else if (currentAnalysis === 'time') {
+    html += '<div class="form-group"><label>项目名称（可选）</label><select id="af-project"><option value="">全部项目</option>';
+    filterOptions.projects.forEach(function(p) { html += '<option value="' + p + '">' + p + '</option>'; });
+    html += '</select></div>';
+    html += '<div class="form-group"><label>开始日期（可选）</label><input type="date" id="af-start"></div>';
+    html += '<div class="form-group"><label>结束日期（可选）</label><input type="date" id="af-end"></div>';
+  }
+  container.innerHTML = html;
+}
+
+function getAnalysisParams() {
+  var params = {};
+  var project = document.getElementById('af-project');
+  if (project) params.project = project.value;
+  var major = document.getElementById('af-major');
+  if (major) params.major = major.value;
+  var designer = document.getElementById('af-designer');
+  if (designer) params.designer = designer.value;
+  var unit = document.getElementById('af-unit');
+  if (unit) params.unit_project = unit.value;
+  var start = document.getElementById('af-start');
+  if (start) params.start_date = start.value;
+  var end = document.getElementById('af-end');
+  if (end) params.end_date = end.value;
+  return params;
+}
+
+async function runAnalysis() {
+  var params = getAnalysisParams();
+  var url = '/api/stats/' + currentAnalysis;
+  var queryParts = [];
+  for (var k in params) {
+    if (params[k]) queryParts.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+  }
+  if (queryParts.length) url += '?' + queryParts.join('&');
+
+  showLoading();
+  var result = await api('GET', url);
+  hideLoading();
+  if (!result || result.code !== 200) { showToast('分析失败', 'error'); return; }
+
+  var data = result.data;
+  document.getElementById('analysisChartCard').style.display = 'block';
+  document.getElementById('analysisTableCard').style.display = 'block';
+
+  // Render chart
+  renderAnalysisChart(data);
+
+  // Render detail table
+  renderAnalysisTable(data);
+}
+
+function destroyChart(id) {
+  if (chartInstances[id]) {
+    chartInstances[id].destroy();
+    delete chartInstances[id];
+  }
+}
+
+function renderAnalysisChart(data) {
+  destroyChart('analysis');
+  var canvas = document.getElementById('analysisChart');
+  var titles = { major: '按专业统计', designer: '按设计人员统计', project: '按项目统计', time: '按时间趋势' };
+  document.getElementById('analysisChartTitle').textContent = titles[currentAnalysis] || '统计图表';
+
+  var labels = data.labels || [];
+  var totals = data.totals || [];
+  var completed = data.completed || [];
+
+  if (currentAnalysis === 'time') {
+    chartInstances['analysis'] = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '总数', data: totals, borderColor: '#1a73e8', backgroundColor: 'rgba(26,115,232,0.1)', fill: true, tension: 0.3 },
+          { label: '已完成', data: completed, borderColor: '#34a853', backgroundColor: 'rgba(52,168,83,0.1)', fill: true, tension: 0.3 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+  } else {
+    chartInstances['analysis'] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '总数', data: totals, backgroundColor: 'rgba(26,115,232,0.7)', borderRadius: 4 },
+          { label: '已完成', data: completed, backgroundColor: 'rgba(52,168,83,0.7)', borderRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+  }
+}
+
+function renderAnalysisTable(data) {
+  var thead = document.getElementById('analysisTableHead');
+  var tbody = document.getElementById('analysisTableBody');
+  var footer = document.getElementById('analysisTableFooter');
+
+  if (!data.details || data.details.length === 0) {
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="10" class="td-center" style="padding:30px;color:var(--gray-500);">无匹配数据</td></tr>';
+    footer.textContent = '';
+    return;
+  }
+
+  // Build header based on analysis type and track column count
+  var headerHtml = '<tr>';
+  var colCount = 0;
+  if (currentAnalysis === 'major') {
+    headerHtml += '<th>专业</th><th>项目名称</th><th>单位工程</th><th>图纸内容</th><th>设计人</th><th>完成情况</th><th>计划开始</th><th>计划完成</th>';
+    colCount = 8;
+  } else if (currentAnalysis === 'designer') {
+    headerHtml += '<th>设计人员</th><th>来源</th><th>项目名称</th><th>内容</th><th>完成情况</th><th>计划完成</th>';
+    colCount = 6;
+  } else if (currentAnalysis === 'project') {
+    headerHtml += '<th>项目名称</th><th>单位工程</th><th>专业</th><th>图纸内容</th><th>设计人</th><th>完成情况</th>';
+    colCount = 6;
+  } else {
+    headerHtml += '<th>月份</th><th>施工图</th><th>阶段设计</th><th>技术要求</th>';
+    colCount = 4;
+  }
+  headerHtml += '</tr>';
+  thead.innerHTML = headerHtml;
+
+  // Build rows
+  var bodyHtml = '';
+  var grandTotal = 0, grandCompleted = 0;
+
+  if (currentAnalysis === 'time') {
+    // Time analysis: summary rows
+    data.labels.forEach(function(label, i) {
+      bodyHtml += '<tr><td>' + label + '</td><td>' + (data.totals[i] || 0) + '</td><td>' + (data.phaseTotals ? data.phaseTotals[i] || 0 : '-') + '</td><td>' + (data.technicalTotals ? data.technicalTotals[i] || 0 : '-') + '</td></tr>';
+      grandTotal += (data.totals[i] || 0);
+    });
+  } else {
+    data.details.forEach(function(detail) {
+      var items = detail.items || [];
+      items.forEach(function(item, idx) {
+        bodyHtml += '<tr>';
+        if (currentAnalysis === 'major') {
+          if (idx === 0) bodyHtml += '<td rowspan="' + items.length + '" style="font-weight:600;">' + (detail.major || '') + '</td>';
+          bodyHtml += '<td>' + (item.projectName || '') + '</td><td>' + (item.unitProject || '') + '</td><td>' + (item.drawingContent || '') + '</td><td>' + (item.designer || '') + '</td><td>' + (item.completionStatus || '') + '</td><td>' + (item.startDate || '') + '</td><td>' + (item.endDate || '') + '</td>';
+        } else if (currentAnalysis === 'designer') {
+          if (idx === 0) bodyHtml += '<td rowspan="' + items.length + '" style="font-weight:600;">' + (detail.designer || '') + '</td>';
+          bodyHtml += '<td>' + (item.type || '') + '</td><td>' + (item.projectName || '') + '</td><td>' + (item.content || item.drawingContent || item.equipmentName || '') + '</td><td>' + (item.completionStatus || '') + '</td><td>' + (item.endDate || '') + '</td>';
+        } else if (currentAnalysis === 'project') {
+          if (idx === 0) bodyHtml += '<td rowspan="' + items.length + '" style="font-weight:600;">' + (detail.projectName || '') + '</td>';
+          bodyHtml += '<td>' + (item.unitProject || '') + '</td><td>' + (item.major || '') + '</td><td>' + (item.drawingContent || '') + '</td><td>' + (item.designer || '') + '</td><td>' + (item.completionStatus || '') + '</td>';
+        }
+        bodyHtml += '</tr>';
+      });
+      grandTotal += items.length;
+      grandCompleted += (detail.completed || 0);
+    });
+  }
+
+  // Total row
+  if (currentAnalysis !== 'time') {
+    bodyHtml += '<tr class="analysis-total-row"><td colspan="' + colCount + '">合计：共 ' + grandTotal + ' 条，已完成 ' + grandCompleted + ' 条，完成率 ' + (grandTotal ? Math.round(grandCompleted/grandTotal*100) : 0) + '%</td></tr>';
+  } else {
+    bodyHtml += '<tr class="analysis-total-row"><td>合计</td><td>' + grandTotal + '</td><td>-</td><td>-</td></tr>';
+  }
+
+  tbody.innerHTML = bodyHtml;
+  footer.textContent = '共 ' + (currentAnalysis === 'time' ? data.labels.length : grandTotal) + ' 条记录';
+}
+
+// ==================== UTILITIES ====================
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showToast(msg, type) {
+  var container = document.getElementById('toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  var icons = { success: '&#10003;', error: '&#10007;', info: '&#8505;' };
+  toast.innerHTML = '<span>' + (icons[type] || '') + '</span> ' + msg;
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(40px)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 2500);
+}
+
+// ==================== EVENT BINDINGS ====================
+
+// Login
+document.getElementById('loginBtn').addEventListener('click', handleLogin);
+document.getElementById('loginUsername').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); handleLogin(); }
+});
+document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); handleLogin(); }
+});
+document.getElementById('btnLogout').addEventListener('click', handleLogout);
+
+// Tab switching
+document.querySelectorAll('.tab-btn[data-tab]').forEach(function(btn) {
+  btn.addEventListener('click', function() { switchTab(this.getAttribute('data-tab')); });
+});
+
+// Search with debounce for data tables
+['construction', 'phase', 'technical'].forEach(function(table) {
+  document.getElementById('search-' + table).addEventListener('input', function() {
+    var t = table;
+    clearTimeout(searchTimers[t]);
+    searchTimers[t] = setTimeout(function() { loadTable(t); }, 300);
+  });
+});
+
+// Search for designers
+document.getElementById('search-designers').addEventListener('input', function() {
+  var t = 'designers';
+  clearTimeout(searchTimers[t]);
+  searchTimers[t] = setTimeout(function() { loadDesigners(); }, 300);
+});
+
+// Template download buttons
+['construction', 'phase', 'technical'].forEach(function(table) {
+  document.getElementById('btn-template-' + table).addEventListener('click', function() { downloadTemplate(table); });
+});
+
+// Import buttons
+['construction', 'phase', 'technical'].forEach(function(table) {
+  document.getElementById('btn-import-' + table).addEventListener('click', function() { triggerImport(table); });
+  document.getElementById('file-import-' + table).addEventListener('change', function() { handleImport(table, this); });
+});
+
+// Export CSV buttons
+['construction', 'phase', 'technical'].forEach(function(table) {
+  document.getElementById('btn-export-csv-' + table).addEventListener('click', function() { exportCSV(table); });
+});
+
+// Export Excel buttons (phase and technical only, construction uses filter export)
+['phase', 'technical'].forEach(function(table) {
+  document.getElementById('btn-export-excel-' + table).addEventListener('click', function() { downloadExportExcel(table); });
+});
+
+// Construction export uses filter modal
+// Event binding is done in EXPORT FILTER EVENT BINDINGS section
+
+// Add record buttons
+['construction', 'phase', 'technical'].forEach(function(table) {
+  document.getElementById('btn-add-' + table).addEventListener('click', function() { openAddModal(table); });
+});
+
+// Add user button
+document.getElementById('btn-add-user').addEventListener('click', openAddUserModal);
+document.getElementById('btn-sync-users').addEventListener('click', syncUsersFromDesigners);
+document.getElementById('btnChangePassword').addEventListener('click', openChangePasswordModal);
+
+// Add designer button
+document.getElementById('btn-add-designer').addEventListener('click', openAddDesignerModal);
+document.getElementById('btn-template-designers').addEventListener('click', exportDesignerTemplate);
+document.getElementById('btn-import-designers').addEventListener('click', triggerImportDesigners);
+document.getElementById('btn-export-excel-designers').addEventListener('click', exportDesignersExcel);
+
+// Add major category button
+document.getElementById('btn-add-major').addEventListener('click', openAddMajorModal);
+
+// Modal buttons
+document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+document.getElementById('modalSaveBtn').addEventListener('click', function() {
+  var modalTitle = document.getElementById('modalTitle').textContent;
+  if (modalTitle === '修改密码') {
+    changePassword();
+  } else if (currentEditTable === 'user') {
+    saveUser();
+  } else if (currentEditTable === 'designer') {
+    saveDesigner();
+  } else if (currentEditTable === 'major') {
+    saveMajorCategory();
+  } else {
+    saveRecord();
+  }
+});
+
+// Confirm dialog
+document.getElementById('confirmCancelBtn').addEventListener('click', closeConfirm);
+document.getElementById('confirmBtn').addEventListener('click', confirmAction);
+
+// Overlay click to close
+document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('confirmOverlay').addEventListener('click', function(e) { if (e.target === this) closeConfirm(); });
+
+// Keyboard
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeModal(); closeConfirm(); closeAllFilterPanels(); }
+});
+
+// Delegate click for sort headers (th-sort-text and sort arrows)
+document.addEventListener('click', function(e) {
+  var sortText = e.target.closest('.th-sort-text');
+  if (sortText) {
+    var table = sortText.getAttribute('data-table');
+    var col = sortText.getAttribute('data-col');
+    var fs = filterState[table];
+    if (fs.sort.key === col) {
+      fs.sort.dir = fs.sort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      fs.sort.key = col;
+      fs.sort.dir = 'asc';
+    }
+    buildTableHead(table);
+    applyFiltersAndRender(table);
+    return;
+  }
+
+  var sortArrow = e.target.closest('.sort-up, .sort-down');
+  if (sortArrow) {
+    var table = sortArrow.getAttribute('data-table');
+    var col = sortArrow.getAttribute('data-col');
+    var dir = sortArrow.getAttribute('data-dir');
+    filterState[table].sort.key = col;
+    filterState[table].sort.dir = dir;
+    buildTableHead(table);
+    applyFiltersAndRender(table);
+    return;
+  }
+
+  // Filter button
+  var filterBtn = e.target.closest('.th-filter-btn');
+  if (filterBtn) {
+    e.stopPropagation();
+    var table = filterBtn.getAttribute('data-table');
+    var col = filterBtn.getAttribute('data-col');
+    var colType = filterBtn.getAttribute('data-coltype');
+    showFilterPanel(table, col, colType, filterBtn);
+    return;
+  }
+});
+
+// Close filter panels when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.filter-panel') && !e.target.closest('.th-filter-btn')) {
+    closeAllFilterPanels();
+  }
+});
+
+// Analysis tab switching
+document.addEventListener('click', function(e) {
+  var tab = e.target.closest('.analysis-tab');
+  if (tab) { switchAnalysis(tab.getAttribute('data-analysis')); }
+});
+
+// Run analysis button
+document.getElementById('btnRunAnalysis').addEventListener('click', runAnalysis);
+
+// Delegate click for dynamic buttons (edit/delete in tables)
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  var action = btn.getAttribute('data-action');
+  var table = btn.getAttribute('data-table');
+  var id = parseInt(btn.getAttribute('data-id'));
+
+  if (action === 'edit') openEditModal(table, id);
+  else if (action === 'delete') deleteRecord(table, id);
+  else if (action === 'edit-user') openEditUserModal(id);
+  else if (action === 'delete-user') deleteUser(id);
+  else if (action === 'edit-designer') openEditDesignerModal(id);
+  else if (action === 'toggle-designer') toggleDesignerActive(id);
+  else if (action === 'delete-designer') deleteDesigner(id);
+  else if (action === 'delete-major') deleteMajorCategory(id);
+});
+
+// ==================== BATCH DELETE FUNCTIONS ====================
+var BD_CONFIG = {
+  construction: {
+    panelId: 'batch-delete-panel-construction',
+    projectSelect: 'bd-construction-project',
+    unitSelect: 'bd-construction-unit',
+    designerSelect: 'bd-construction-designer',
+    majorSelect: 'bd-construction-major',
+    startInput: 'bd-construction-start',
+    endInput: 'bd-construction-end',
+    api: '/api/batch-delete/construction'
+  },
+  phase: {
+    panelId: 'batch-delete-panel-phase',
+    projectSelect: 'bd-phase-project',
+    departmentSelect: 'bd-phase-department',
+    startInput: 'bd-phase-start',
+    endInput: 'bd-phase-end',
+    api: '/api/batch-delete/phase'
+  },
+  technical: {
+    panelId: 'batch-delete-panel-technical',
+    equipmentInput: 'bd-technical-equipment',
+    designerSelect: 'bd-technical-designer',
+    startInput: 'bd-technical-start',
+    endInput: 'bd-technical-end',
+    api: '/api/batch-delete/technical'
+  }
+};
+
+function toggleBatchDeletePanel(table) {
+  var config = BD_CONFIG[table];
+  var panel = document.getElementById(config.panelId);
+  if (panel.style.display === 'none' || panel.style.display === '') {
+    panel.style.display = 'block';
+    loadBDOptions(table);
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function loadBDOptions(table) {
+  var config = BD_CONFIG[table];
+  
+  if (table === 'construction') {
+    loadBDProjects(table);
+    loadBDDesigners(table);
+    loadBDUnits(table);
+  } else if (table === 'phase') {
+    loadBDProjects(table);
+    loadBDDepartments(table);
+  } else if (table === 'technical') {
+    loadBDDesigners(table);
+  }
+}
+
+async function loadBDProjects(table) {
+  var select = document.getElementById(BD_CONFIG[table].projectSelect);
+  if (!select) return;
+  
+  var result = await api('GET', '/api/stats/filter-options');
+  if (result && result.code === 200) {
+    var projects = result.data.projects || [];
+    var html = '<option value="">全部项目</option>';
+    projects.forEach(function(p) {
+      html += '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
+    });
+    select.innerHTML = html;
+  }
+}
+
+async function loadBDDesigners(table) {
+  var select = document.getElementById(BD_CONFIG[table].designerSelect);
+  if (!select) return;
+  
+  var result = await api('GET', '/api/stats/filter-options');
+  if (result && result.code === 200) {
+    var designers = result.data.designers || [];
+    var html = '<option value="">全部人员</option>';
+    designers.forEach(function(d) {
+      html += '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + '</option>';
+    });
+    select.innerHTML = html;
+  }
+}
+
+async function loadBDUnits(table) {
+  var select = document.getElementById(BD_CONFIG[table].unitSelect);
+  if (!select) return;
+  
+  var result = await api('GET', '/api/stats/filter-options');
+  if (result && result.code === 200) {
+    var units = result.data.unitProjects || [];
+    var html = '<option value="">全部</option>';
+    units.forEach(function(u) {
+      html += '<option value="' + escapeHtml(u) + '">' + escapeHtml(u) + '</option>';
+    });
+    select.innerHTML = html;
+  }
+}
+
+async function loadBDDepartments(table) {
+  var select = document.getElementById(BD_CONFIG[table].departmentSelect);
+  if (!select) return;
+  
+  var result = await api('GET', '/api/phase');
+  if (result && result.code === 200) {
+    var deps = new Set();
+    result.data.forEach(function(r) {
+      if (r.department) deps.add(r.department);
+    });
+    var html = '<option value="">全部部门</option>';
+    Array.from(deps).sort().forEach(function(d) {
+      html += '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + '</option>';
+    });
+    select.innerHTML = html;
+  }
+}
+
+function resetBDPanel(table) {
+  var config = BD_CONFIG[table];
+  
+  if (config.projectSelect) {
+    document.getElementById(config.projectSelect).value = '';
+  }
+  if (config.unitSelect) {
+    document.getElementById(config.unitSelect).value = '';
+  }
+  if (config.designerSelect) {
+    document.getElementById(config.designerSelect).value = '';
+  }
+  if (config.majorSelect) {
+    document.getElementById(config.majorSelect).value = '';
+  }
+  if (config.departmentSelect) {
+    document.getElementById(config.departmentSelect).value = '';
+  }
+  if (config.equipmentInput) {
+    document.getElementById(config.equipmentInput).value = '';
+  }
+  if (config.startInput) {
+    document.getElementById(config.startInput).value = '';
+  }
+  if (config.endInput) {
+    document.getElementById(config.endInput).value = '';
+  }
+}
+
+function getBDParams(table) {
+  var config = BD_CONFIG[table];
+  var params = {};
+  
+  if (config.projectSelect) {
+    var val = document.getElementById(config.projectSelect).value;
+    if (val) params.project = val;
+  }
+  if (config.unitSelect) {
+    var val = document.getElementById(config.unitSelect).value;
+    if (val) params.unit_project = val;
+  }
+  if (config.designerSelect) {
+    var val = document.getElementById(config.designerSelect).value;
+    if (val) params.designer = val;
+  }
+  if (config.majorSelect) {
+    var val = document.getElementById(config.majorSelect).value;
+    if (val) params.major = val;
+  }
+  if (config.departmentSelect) {
+    var val = document.getElementById(config.departmentSelect).value;
+    if (val) params.department = val;
+  }
+  if (config.equipmentInput) {
+    var val = document.getElementById(config.equipmentInput).value.trim();
+    if (val) params.equipment = val;
+  }
+  if (config.startInput) {
+    var val = document.getElementById(config.startInput).value;
+    if (val) params.start_date = val;
+  }
+  if (config.endInput) {
+    var val = document.getElementById(config.endInput).value;
+    if (val) params.end_date = val;
+  }
+  
+  return params;
+}
+
+async function executeBatchDelete(table) {
+  var params = getBDParams(table);
+  var hasCondition = Object.keys(params).length > 0;
+  
+  if (!hasCondition) {
+    showToast('请至少选择一个筛选条件', 'error');
+    return;
+  }
+  
+  pendingConfirmAction = async function() {
+    showLoading();
+    var config = BD_CONFIG[table];
+    var result = await api('POST', config.api, params);
+    hideLoading();
+    
+    if (result && result.code === 200) {
+      showToast('批量删除成功，共删除 ' + result.data.count + ' 条记录', 'success');
+      resetBDPanel(table);
+      loadTable(table);
+    } else {
+      showToast(result ? result.msg : '批量删除失败', 'error');
+    }
+  };
+  
+  document.getElementById('confirmTitle').textContent = '确认批量删除';
+  document.getElementById('confirmMsg').textContent = '确定要删除符合条件的记录吗？此操作不可撤销。';
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+// ==================== BATCH DELETE EVENT BINDINGS ====================
+// Construction batch delete
+document.getElementById('btn-batch-delete-construction').addEventListener('click', function() {
+  if (currentUser && ROLES[currentUser.role].canEdit) {
+    toggleBatchDeletePanel('construction');
+  } else {
+    showToast('您没有删除权限', 'error');
+  }
+});
+document.getElementById('btn-bd-reset-construction').addEventListener('click', function() {
+  resetBDPanel('construction');
+});
+document.getElementById('btn-bd-execute-construction').addEventListener('click', function() {
+  executeBatchDelete('construction');
+});
+
+// Phase batch delete
+document.getElementById('btn-batch-delete-phase').addEventListener('click', function() {
+  if (currentUser && ROLES[currentUser.role].canEdit) {
+    toggleBatchDeletePanel('phase');
+  } else {
+    showToast('您没有删除权限', 'error');
+  }
+});
+document.getElementById('btn-bd-reset-phase').addEventListener('click', function() {
+  resetBDPanel('phase');
+});
+document.getElementById('btn-bd-execute-phase').addEventListener('click', function() {
+  executeBatchDelete('phase');
+});
+
+// Technical batch delete
+document.getElementById('btn-batch-delete-technical').addEventListener('click', function() {
+  if (currentUser && ROLES[currentUser.role].canEdit) {
+    toggleBatchDeletePanel('technical');
+  } else {
+    showToast('您没有删除权限', 'error');
+  }
+});
+document.getElementById('btn-bd-reset-technical').addEventListener('click', function() {
+  resetBDPanel('technical');
+});
+document.getElementById('btn-bd-execute-technical').addEventListener('click', function() {
+  executeBatchDelete('technical');
+});
+
+// ==================== EXPORT FILTER EVENT BINDINGS ====================
+document.getElementById('btn-export-excel-construction').addEventListener('click', function() {
+  openExportFilterModal('construction');
+});
+document.getElementById('exportFilterCloseBtn').addEventListener('click', closeExportFilterModal);
+document.getElementById('exportFilterCancelBtn').addEventListener('click', closeExportFilterModal);
+document.getElementById('exportFilterSaveBtn').addEventListener('click', executeExportWithFilter);
+document.getElementById('exportFilterOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeExportFilterModal();
+});
+
+// ==================== BATCH ADD FUNCTIONS ====================
+var currentBatchAddTable = null;
+
+function openBatchAddModal(table) {
+  if (!currentUser || !ROLES[currentUser.role].canEdit) {
+    showToast('您没有编辑权限', 'error');
+    return;
+  }
+  currentBatchAddTable = table;
+  var config = TABLE_CONFIG[table];
+  document.getElementById('batchAddTitle').textContent = '批量新增' + config.name;
+  
+  var html = '<div class="form-group"><label>新增数量 (1-20)</label><input type="number" id="batchAddCount" value="5" min="1" max="20" class="bd-input" style="width:150px;"></div>';
+  
+  if (table === 'construction') {
+    html += '<div class="form-group"><label>项目名称 <span style="color:#e74c3c">*</span></label><input type="text" id="batchAddProjectName" class="bd-input" placeholder="请输入项目名称"></div>';
+    html += '<div class="form-group"><label>单位工程名称 <span style="color:#e74c3c">*</span></label><input type="text" id="batchAddUnitProject" class="bd-input" placeholder="请输入单位工程名称"></div>';
+    html += '<div class="form-group"><label>单位工程下专业图纸内容</label><input type="text" id="batchAddDrawingContent" class="bd-input" placeholder="请输入图纸内容"></div>';
+    html += '<div class="form-group"><label>专业类别</label><select id="batchAddMajorCategory" class="bd-input"><option value="">请选择</option><option value="建筑">建筑</option><option value="结构">结构</option><option value="给排水">给排水</option><option value="暖通">暖通</option><option value="电气">电气</option><option value="总图">总图</option><option value="动力">动力</option><option value="通信">通信</option></select></div>';
+    html += '<div class="form-group"><label>设计人</label><select id="batchAddDesigner" class="bd-input"><option value="">请选择</option></select></div>';
+  }
+  
+  document.getElementById('batchAddBody').innerHTML = html;
+  loadDesignerOptions('batchAddDesigner');
+  document.getElementById('batchAddOverlay').classList.add('show');
+}
+
+function closeBatchAddModal() {
+  document.getElementById('batchAddOverlay').classList.remove('show');
+  currentBatchAddTable = null;
+}
+
+async function executeBatchAdd() {
+  var count = parseInt(document.getElementById('batchAddCount').value);
+  if (!count || count < 1 || count > 20) {
+    showToast('请输入有效的新增数量（1-20）', 'error');
+    return;
+  }
+  
+  if (currentBatchAddTable === 'construction') {
+    var projectName = document.getElementById('batchAddProjectName').value.trim();
+    var unitProject = document.getElementById('batchAddUnitProject').value.trim();
+    if (!projectName || !unitProject) {
+      showToast('请填写必填项：项目名称和单位工程名称', 'error');
+      return;
+    }
+    
+    var drawingContent = document.getElementById('batchAddDrawingContent').value.trim();
+    var majorCategory = document.getElementById('batchAddMajorCategory').value;
+    var designer = document.getElementById('batchAddDesigner').value;
+    
+    showLoading();
+    var successCount = 0;
+    var failCount = 0;
+    
+    for (var i = 0; i < count; i++) {
+      var result = await api('POST', '/api/construction', {
+        projectName: projectName,
+        unitProject: unitProject,
+        drawingContent: drawingContent,
+        majorCategory: majorCategory,
+        designer: designer,
+        completionStatus: '未开始'
+      });
+      if (result && result.code === 200) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+    hideLoading();
+    
+    if (successCount > 0) {
+      showToast('批量新增成功，共新增 ' + successCount + ' 条记录' + (failCount > 0 ? '，失败 ' + failCount + ' 条' : ''), 'success');
+      loadTable('construction');
+      closeBatchAddModal();
+    } else {
+      showToast('批量新增失败', 'error');
+    }
+  }
+}
+
+// ==================== BATCH ADD EVENT BINDINGS ====================
+document.getElementById('batchAddCloseBtn').addEventListener('click', closeBatchAddModal);
+document.getElementById('batchAddCancelBtn').addEventListener('click', closeBatchAddModal);
+document.getElementById('batchAddSaveBtn').addEventListener('click', executeBatchAdd);
+document.getElementById('batchAddOverlay').addEventListener('click', function(e) {
+  if (e.target === document.getElementById('batchAddOverlay')) {
+    closeBatchAddModal();
+  }
+});
+
+document.getElementById('btn-batch-add-construction').addEventListener('click', function() {
+  openBatchAddModal('construction');
+});
+
+// ==================== INIT ====================
+checkSession();
+</script>
+</body>
+</html>
