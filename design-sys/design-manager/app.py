@@ -22,6 +22,7 @@ except ImportError:
 
 # 简化的拼音映射（当pypinyin不可用时）
 SIMPLE_PINYIN = {
+    # 常用姓
     '王': 'wang', '李': 'li', '张': 'zhang', '刘': 'liu', '陈': 'chen',
     '杨': 'yang', '黄': 'huang', '赵': 'zhao', '周': 'zhou', '吴': 'wu',
     '徐': 'xu', '孙': 'sun', '马': 'ma', '朱': 'zhu', '胡': 'hu',
@@ -42,44 +43,85 @@ SIMPLE_PINYIN = {
     '毛': 'mao', '郝': 'hao', '龚': 'gong', '邵': 'shao', '万': 'wan',
     '钱': 'qian', '严': 'yan', '孔': 'kong', '常': 'chang', '武': 'wu',
     '乔': 'qiao', '赖': 'lai', '庞': 'pang', '樊': 'fan', '殷': 'yin',
-    '施': 'shi', '陶': 'tao', '洪': 'hong', '翟': 'zhai', '安': 'an'
+    '施': 'shi', '洪': 'hong', '翟': 'zhai', '安': 'an', '章': 'zhang',
+    '梁': 'liang', '谢': 'xie', '宋': 'song', '唐': 'tang', '邓': 'deng',
+    '付': 'fu', 
+    # 常用名
+    '伟': 'wei', '强': 'qiang', '勇': 'yong', '军': 'jun', '辉': 'hui',
+    '敏': 'min', '静': 'jing', '丽': 'li', '芳': 'fang', '娜': 'na',
+    '婷': 'ting', '倩': 'qian', '宁': 'ning', '琳': 'lin', '玲': 'ling',
+    '华': 'hua', '明': 'ming', '磊': 'lei', '涛': 'tao', '杰': 'jie',
+    '鹏': 'peng', '飞': 'fei', '燕': 'yan', '红': 'hong', '青': 'qing',
+    '平': 'ping', '波': 'bo', '刚': 'gang', '峰': 'feng', '超': 'chao',
+    '洋': 'yang', '亮': 'liang', '伟': 'wei', '东': 'dong', '浩': 'hao',
+    '文': 'wen', '军': 'jun', '德': 'de', '志': 'zhi', '忠': 'zhong',
+    '业': 'ye', '建': 'jian', '福': 'fu', '贵': 'gui', '生': 'sheng',
+    '学': 'xue', '龙': 'long', '云': 'yun', '雪': 'xue', '梅': 'mei',
+    '兰': 'lan', '菊': 'ju', '桂': 'gui', '英': 'ying', '秀': 'xiu',
+    '珍': 'zhen', '珠': 'zhu', '琴': 'qin', '棋': 'qi', '书': 'shu',
+    '画': 'hua', '诗': 'shi', '雅': 'ya', '洁': 'jie', '婷': 'ting',
+    '慧': 'hui', '颖': 'ying', '欣': 'xin', '怡': 'yi', '然': 'ran',
+    '思': 'si', '雨': 'yu', '雨': 'yu', '晨': 'chen', '曦': 'xi',
+    '梦': 'meng', '琪': 'qi', '瑶': 'yao', '璇': 'xuan', '瑾': 'jin',
+    '萱': 'xuan', '怡': 'yi', '诺': 'nuo', '依': 'yi', '涵': 'han',
+    '梓': 'zi', '萱': 'xuan', '欣': 'xin', '怡': 'yi', '诺': 'nuo',
+    '轩': 'xuan', '涵': 'han', '泽': 'ze', '宇': 'yu', '浩': 'hao',
+    '宸': 'chen', '睿': 'rui', '铭': 'ming', '昊': 'hao', '硕': 'shuo',
+    '航': 'hang', '宇': 'yu', '辰': 'chen', '熙': 'xi', '哲': 'zhe',
+    '仕': 'shi', '永': 'yong','子':'zi','艳':'yan','红':'hong','辉':'hui',
+    '亚':'ya','敏':'min','娟':'juan','昊':'hao','崔':'cui','巍':'wei','磊':'lei',
+    '涛':'tao','杰':'jie','阊':'chang','圣':'sheng','晓':'xiao','灿':'can','玮':'wei',
+    '久':'jiu',
+       # 工程师常用名后缀
+    '工': 'gong', '师': 'shi', '员': 'yuan'
 }
 
 
 def generate_username(chinese_name):
-    """根据中文姓名生成用户名"""
+    """根据中文姓名生成用户名
+    - 2个汉字：全拼（如"王工" → "wanggong"）
+    - 3个及以上汉字：姓全拼+名首字母（如"邹仕强" → "zousq"）
+    """
     if not chinese_name or not isinstance(chinese_name, str):
         return 'user'
-    
+
     name = chinese_name.strip()
     if len(name) == 0:
         return 'user'
-    
-    pinyin_result = []
-    
+
+    pinyin_list = []
+
     if USE_PYPINYIN:
-        # 使用pypinyin库
         try:
-            pinyin_result = [p[0].lower() for p in pinyin(name, style=Style.NORMAL)]
+            raw = pinyin(name, style=Style.NORMAL)
+            if raw and len(raw) > 0:
+                for item in raw:
+                    if isinstance(item, list) and len(item) > 0:
+                        pinyin_list.append(item[0].lower())
+                    elif isinstance(item, str):
+                        pinyin_list.append(item.lower())
         except:
             pass
-    
-    if not pinyin_result:
-        # 使用简化拼音映射
-        pinyin_result = []
+
+    if not pinyin_list:
         for char in name:
-            pinyin_result.append(SIMPLE_PINYIN.get(char, char.lower()))
-    
-    if len(pinyin_result) == 1:
-        # 单字姓名
-        return pinyin_result[0]
-    elif len(pinyin_result) == 2:
-        # 双字姓名：全拼
-        return ''.join(pinyin_result)
+            py = SIMPLE_PINYIN.get(char, '')
+            if not py:
+                # 如果汉字不在映射表中，使用默认首字母'x'
+                py = 'x'
+            pinyin_list.append(py)
+
+    pinyin_list = [p for p in pinyin_list if p]
+
+    if len(pinyin_list) == 0:
+        return 'user'
+    elif len(pinyin_list) == 1:
+        return pinyin_list[0]
+    elif len(pinyin_list) == 2:
+        return ''.join(pinyin_list)
     else:
-        # 三字及以上：姓全拼 + 名首字母
-        surname = pinyin_result[0]
-        given_name_initials = ''.join([p[0] for p in pinyin_result[1:]])
+        surname = pinyin_list[0]
+        given_name_initials = ''.join([p[0] if len(p) > 0 else '' for p in pinyin_list[1:]])
         return surname + given_name_initials
 
 # ==================== App Config ====================
@@ -2195,6 +2237,145 @@ def api_stats_filter_options():
             'designers': sorted(list(designers)),
             'unitProjects': sorted(list(unit_projects)),
             'phases': sorted(list(phases)),
+        }
+    })
+
+
+@app.route('/api/dashboard', methods=['GET'])
+@login_required
+def api_dashboard():
+    """项目驾驶舱综合数据（支持按项目筛选）"""
+    project_name = request.args.get('project', '').strip()
+    
+    # 构建查询条件
+    query = ConstructionPlan.query
+    if project_name:
+        query = query.filter(ConstructionPlan.project_name == project_name)
+    
+    all_construction = query.all()
+    
+    # 只分析施工图计划数据
+    construction_total = len(all_construction)
+    construction_completed = sum(1 for r in all_construction if r.completion_status == '已完成')
+    construction_ongoing = sum(1 for r in all_construction if r.completion_status == '进行中')
+    construction_not_started = sum(1 for r in all_construction if r.completion_status == '未开始')
+    construction_delayed = sum(1 for r in all_construction if r.completion_status == '已延期')
+
+    projects_data = {}
+    project_major_count = {}  # 热力图数据
+    for r in all_construction:
+        pname = r.project_name or '未定义项目'
+        if pname not in projects_data:
+            projects_data[pname] = {
+                'total': 0, 'completed': 0, 'ongoing': 0,
+                'notStarted': 0, 'delayed': 0
+            }
+        projects_data[pname]['total'] += 1
+        if r.completion_status == '已完成':
+            projects_data[pname]['completed'] += 1
+        elif r.completion_status == '进行中':
+            projects_data[pname]['ongoing'] += 1
+        elif r.completion_status == '未开始':
+            projects_data[pname]['notStarted'] += 1
+        elif r.completion_status == '已延期':
+            projects_data[pname]['delayed'] += 1
+        
+        # 热力图统计
+        major = r.major_category or '未分类'
+        key = f"{pname}|{major}"
+        project_major_count[key] = project_major_count.get(key, 0) + 1
+
+    projects_summary = []
+    for pname, pdata in projects_data.items():
+        completion_rate = round(pdata['completed'] / pdata['total'] * 100, 1) if pdata['total'] > 0 else 0
+        delay_rate = round(pdata['delayed'] / pdata['total'] * 100, 1) if pdata['total'] > 0 else 0
+        risk_level = 'high' if delay_rate > 20 else ('medium' if delay_rate > 10 else 'low')
+        projects_summary.append({
+            'name': pname, 'total': pdata['total'], 'completed': pdata['completed'],
+            'ongoing': pdata['ongoing'], 'notStarted': pdata['notStarted'], 'delayed': pdata['delayed'],
+            'completionRate': completion_rate, 'delayRate': delay_rate, 'riskLevel': risk_level
+        })
+
+    major_stats = {}
+    for r in all_construction:
+        major = r.major_category or '未分类'
+        if major not in major_stats:
+            major_stats[major] = {'total': 0, 'completed': 0, 'delayed': 0}
+        major_stats[major]['total'] += 1
+        if r.completion_status == '已完成':
+            major_stats[major]['completed'] += 1
+        elif r.completion_status == '已延期':
+            major_stats[major]['delayed'] += 1
+
+    major_comparison = []
+    for major, mdata in major_stats.items():
+        completion_rate = round(mdata['completed'] / mdata['total'] * 100, 1) if mdata['total'] > 0 else 0
+        major_comparison.append({'major': major, 'total': mdata['total'], 'completed': mdata['completed'], 'completionRate': completion_rate})
+    major_comparison.sort(key=lambda x: x['completionRate'], reverse=True)
+
+    designer_stats = {}
+    for r in all_construction:
+        dname = r.designer or '未指定'
+        if dname not in designer_stats:
+            designer_stats[dname] = {'total': 0, 'completed': 0, 'delayed': 0, 'ongoing': 0}
+        designer_stats[dname]['total'] += 1
+        if r.completion_status == '已完成':
+            designer_stats[dname]['completed'] += 1
+        elif r.completion_status == '已延期':
+            designer_stats[dname]['delayed'] += 1
+        elif r.completion_status == '进行中':
+            designer_stats[dname]['ongoing'] += 1
+
+    designer_workload = []
+    for dname, ddata in designer_stats.items():
+        completion_rate = round(ddata['completed'] / ddata['total'] * 100, 1) if ddata['total'] > 0 else 0
+        delay_rate = round(ddata['delayed'] / ddata['total'] * 100, 1) if ddata['total'] > 0 else 0
+        designer_workload.append({
+            'designer': dname, 'total': ddata['total'], 'completed': ddata['completed'],
+            'ongoing': ddata['ongoing'], 'delayed': ddata['delayed'],
+            'completionRate': completion_rate, 'delayRate': delay_rate
+        })
+    designer_workload.sort(key=lambda x: x['total'], reverse=True)
+
+    # 延期排行榜（优化：使用字典）
+    delay_counts = {}
+    for r in all_construction:
+        if r.completion_status == '已延期':
+            dname = r.designer or '未指定'
+            delay_counts[dname] = delay_counts.get(dname, 0) + 1
+    delay_ranking = [{'designer': dname, 'count': cnt} for dname, cnt in delay_counts.items()]
+    delay_ranking.sort(key=lambda x: x['count'], reverse=True)
+
+    # 热力图数据（从预计算字典生成）
+    heatmap_data = []
+    all_projects = list(projects_data.keys())
+    all_majors = list(major_stats.keys())
+    for key, count in project_major_count.items():
+        parts = key.split('|')
+        heatmap_data.append({'project': parts[0], 'major': parts[1], 'count': count})
+
+    # 获取所有项目列表（用于筛选） - 只从施工图计划中提取
+    all_projects_list = sorted([p[0] for p in ConstructionPlan.query.with_entities(ConstructionPlan.project_name).distinct() if p[0]])
+
+    return jsonify({
+        'code': 200,
+        'data': {
+            'overview': {
+                'constructionTotal': construction_total, 'constructionCompleted': construction_completed,
+                'constructionOngoing': construction_ongoing, 'constructionNotStarted': construction_not_started,
+                'constructionDelayed': construction_delayed,
+                'completionRate': round(construction_completed / construction_total * 100, 1) if construction_total > 0 else 0,
+                'delayRate': round(construction_delayed / construction_total * 100, 1) if construction_total > 0 else 0
+            },
+            'projectProgress': projects_summary,
+            'majorComparison': major_comparison,
+            'designerWorkload': designer_workload[:15],
+            'delayRanking': delay_ranking[:10],
+            'heatmapData': heatmap_data,
+            'allProjects': all_projects,
+            'allMajors': all_majors,
+            'projectFilterOptions': all_projects_list,
+            'selectedProject': project_name
         }
     })
 
