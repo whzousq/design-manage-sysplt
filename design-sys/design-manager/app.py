@@ -258,6 +258,7 @@ class TechnicalPlan(db.Model):
     """技术要求计划表"""
     __tablename__ = 'technical_plans'
     id = db.Column(db.Integer, primary_key=True)
+    project_name = db.Column(db.String(200))
     equipment_name = db.Column(db.String(200), nullable=False)
     designer = db.Column(db.String(50))
     design_complete_date = db.Column(db.String(20))
@@ -270,6 +271,7 @@ class TechnicalPlan(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
+            'projectName': self.project_name,
             'equipmentName': self.equipment_name,
             'designer': self.designer,
             'designCompleteDate': self.design_complete_date,
@@ -1210,12 +1212,16 @@ def api_delete_phase(record_id):
 def api_get_technical():
     """获取技术要求计划列表"""
     keyword = request.args.get('keyword', '').strip()
+    project = request.args.get('project', '').strip()
     query = TechnicalPlan.query.order_by(TechnicalPlan.id)
     if keyword:
         query = query.filter(db.or_(
+            TechnicalPlan.project_name.contains(keyword),
             TechnicalPlan.equipment_name.contains(keyword),
             TechnicalPlan.designer.contains(keyword),
         ))
+    if project:
+        query = query.filter(TechnicalPlan.project_name == project)
     records = query.all()
     return jsonify({'code': 200, 'data': [r.to_dict() for r in records]})
 
@@ -1229,6 +1235,7 @@ def api_create_technical():
         return jsonify({'code': 400, 'msg': '设备或货物名称不能为空'}), 400
 
     record = TechnicalPlan(
+        project_name=data.get('projectName', ''),
         equipment_name=data.get('equipmentName', ''),
         designer=data.get('designer', ''),
         design_complete_date=data.get('designCompleteDate', ''),
@@ -1254,6 +1261,7 @@ def api_update_technical(record_id):
     if not data:
         return jsonify({'code': 400, 'msg': '请求数据无效'}), 400
 
+    record.project_name = data.get('projectName', record.project_name)
     record.equipment_name = data.get('equipmentName', record.equipment_name)
     record.designer = data.get('designer', record.designer)
     record.design_complete_date = data.get('designCompleteDate', record.design_complete_date)
@@ -1351,6 +1359,8 @@ def api_batch_delete_technical():
 
     query = TechnicalPlan.query
 
+    if 'project' in data and data['project']:
+        query = query.filter(TechnicalPlan.project_name == data['project'])
     if 'equipment' in data and data['equipment']:
         query = query.filter(TechnicalPlan.equipment_name.contains(data['equipment']))
     if 'designer' in data and data['designer']:
@@ -1383,7 +1393,7 @@ EXCEL_HEADERS = {
         '参与专业', '提资时间', '说明提交时间', '最终出版时间', '备注'
     ],
     'technical': [
-        '设备或货物名称', '设计人', '设计完成时间', '提采购时间',
+        '工程项目名称', '设备或货物名称', '设计人', '设计完成时间', '提采购时间',
         '提业主审查时间', '业主反馈时间'
     ],
 }
@@ -1561,17 +1571,18 @@ def api_import_excel(table_type):
                 success_count += 1
                 
             elif table_type == 'technical':
-                if not values[0]:
+                if not values[1]:
                     fail_count += 1
                     fail_rows.append(row_idx)
                     continue
                 record = TechnicalPlan(
-                    equipment_name=values[0],
-                    designer=values[1],
-                    design_complete_date=values[2],
-                    purchase_date=values[3],
-                    owner_review_date=values[4],
-                    owner_feedback_date=values[5],
+                    project_name=values[0],
+                    equipment_name=values[1],
+                    designer=values[2],
+                    design_complete_date=values[3],
+                    purchase_date=values[4],
+                    owner_review_date=values[5],
+                    owner_feedback_date=values[6],
                     created_by=session.get('user_id')
                 )
                 db.session.add(record)
@@ -1682,13 +1693,16 @@ def api_export_excel(table_type):
         query = TechnicalPlan.query.order_by(TechnicalPlan.id)
         if keyword:
             query = query.filter(db.or_(
+                TechnicalPlan.project_name.contains(keyword),
                 TechnicalPlan.equipment_name.contains(keyword),
                 TechnicalPlan.designer.contains(keyword),
             ))
+        if project:
+            query = query.filter(TechnicalPlan.project_name == project)
         records = query.all()
         headers = EXCEL_HEADERS['technical']
         data_rows = [[
-            r.equipment_name, r.designer, r.design_complete_date,
+            r.project_name, r.equipment_name, r.designer, r.design_complete_date,
             r.purchase_date, r.owner_review_date, r.owner_feedback_date
         ] for r in records]
     else:
